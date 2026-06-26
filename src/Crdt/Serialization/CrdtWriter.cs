@@ -90,7 +90,7 @@ public ref struct CrdtWriter
     public void WriteGuid(Guid value)
     {
         Span<byte> span = _output.GetSpan(16);
-        _ = value.TryWriteBytes(span);
+        SpanCompat.WriteGuidBytes(value, span);
         _output.Advance(16);
     }
 

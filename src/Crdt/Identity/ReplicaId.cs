@@ -44,7 +44,7 @@ public readonly struct ReplicaId : IEquatable<ReplicaId>, IComparable<ReplicaId>
     {
         Span<byte> bytes = stackalloc byte[16];
         System.Buffers.Binary.BinaryPrimitives.WriteUInt64BigEndian(bytes.Slice(8), value);
-        return new ReplicaId(new Guid(bytes));
+        return new ReplicaId(SpanCompat.CreateGuid(bytes));
     }
 
     /// <summary>Parses a replica id from its canonical <see cref="Guid"/> string form.</summary>

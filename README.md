@@ -11,7 +11,7 @@ High-performance, **NativeAOT-ready** [Conflict-free Replicated Data Types](http
 - **Strong eventual consistency** without coordination: replicas converge after exchanging state, deltas, or operations.
 - **Fast**: `readonly struct` building blocks, `Span<T>`/`IBufferWriter<byte>` serialization, `BinaryPrimitives`/`Unsafe` fast paths, no LINQ on hot paths.
 - **NativeAOT & trimming clean** on .NET 8/9/10 — the library is annotated `IsAotCompatible`, and the test suite itself is verified running as a NativeAOT binary.
-- **Broad reach**: targets `netstandard2.1`, `net8.0`, `net9.0`, `net10.0` (polyfilled on older runtimes).
+- **Broad reach**: targets `netstandard2.0`, `netstandard2.1`, `net8.0`, `net9.0`, `net10.0` (polyfilled on older runtimes).
 
 ## Supported target frameworks
 
@@ -19,6 +19,7 @@ High-performance, **NativeAOT-ready** [Conflict-free Replicated Data Types](http
 | --- | --- |
 | `net10.0`, `net9.0`, `net8.0` | Full feature set; NativeAOT supported. |
 | `netstandard2.1` | Compatibility target (Unity / Mono / .NET Core 3.x) via polyfills; not itself AOT-published. |
+| `netstandard2.0` | Broad compatibility target (.NET Framework 4.6.1+, older Unity / Mono) via `System.Memory` + `Microsoft.Bcl.HashCode` and source polyfills; not AOT-published. |
 
 ## 📦 Install
 

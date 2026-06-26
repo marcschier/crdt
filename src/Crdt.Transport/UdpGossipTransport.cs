@@ -72,7 +72,7 @@ public sealed class UdpGossipTransport : ITransport
     /// <param name="endpoint">The peer endpoint.</param>
     public void AddPeer(IPEndPoint endpoint)
     {
-        ArgumentNullException.ThrowIfNull(endpoint);
+        Throw.IfNull(endpoint, nameof(endpoint));
         lock (_gate)
         {
             if (_socket?.LocalEndPoint is IPEndPoint local && SameEndpoint(local, endpoint))
@@ -88,7 +88,7 @@ public sealed class UdpGossipTransport : ITransport
     /// <param name="endpoints">The peer endpoints.</param>
     public void AddPeers(IEnumerable<IPEndPoint> endpoints)
     {
-        ArgumentNullException.ThrowIfNull(endpoints);
+        Throw.IfNull(endpoints, nameof(endpoints));
         foreach (IPEndPoint endpoint in endpoints)
         {
             AddPeer(endpoint);
@@ -101,7 +101,7 @@ public sealed class UdpGossipTransport : ITransport
         ct.ThrowIfCancellationRequested();
         if (_started)
         {
-            return ValueTask.CompletedTask;
+            return default;
         }
 
         _started = true;
@@ -109,7 +109,7 @@ public sealed class UdpGossipTransport : ITransport
         _socket.Bind(new IPEndPoint(_options.Address, _options.Port));
         _receiveLoop = ReceiveLoopAsync(_stop.Token);
         _gossipLoop = GossipLoopAsync(_stop.Token);
-        return ValueTask.CompletedTask;
+        return default;
     }
 
     /// <inheritdoc/>
@@ -240,7 +240,7 @@ public sealed class UdpGossipTransport : ITransport
     private IPEndPoint? PickPeer()
     {
         IPEndPoint[] peers = SnapshotPeers();
-        return peers.Length == 0 ? null : peers[Random.Shared.Next(peers.Length)];
+        return peers.Length == 0 ? null : peers[SharedRandom.Next(peers.Length)];
     }
 
     private static async ValueTask AwaitLoopAsync(Task? loop)

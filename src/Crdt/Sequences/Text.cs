@@ -125,7 +125,7 @@ public sealed class Text : IConvergent<Text>, IEquatable<Text>
         public char ReadJson(ref Utf8JsonReader reader)
         {
             string? text = reader.GetString();
-            return string.IsNullOrEmpty(text) ? '\0' : text[0];
+            return text is null or "" ? '\0' : text[0];
         }
     }
 }

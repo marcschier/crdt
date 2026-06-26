@@ -562,10 +562,8 @@ public sealed class WootSequence<T> :
     private static Dot ParseDot(string text)
     {
         int separator = text.LastIndexOf(':');
-        var replica = new ReplicaId(Guid.ParseExact(text.AsSpan(0, separator), "N"));
-        ulong sequence = ulong.Parse(
-            text.AsSpan(separator + 1),
-            provider: System.Globalization.CultureInfo.InvariantCulture);
+        var replica = new ReplicaId(SpanCompat.ParseGuidExactN(text.AsSpan(0, separator)));
+        ulong sequence = SpanCompat.ParseUInt64Invariant(text.AsSpan(separator + 1));
         return new Dot(replica, sequence);
     }
 

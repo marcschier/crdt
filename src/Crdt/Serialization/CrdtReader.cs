@@ -114,7 +114,7 @@ public ref struct CrdtReader
 
     /// <summary>Reads a <see cref="Guid"/> from 16 raw bytes.</summary>
     /// <returns>The decoded value.</returns>
-    public Guid ReadGuid() => new(ReadRaw(16));
+    public Guid ReadGuid() => SpanCompat.CreateGuid(ReadRaw(16));
 
     /// <summary>Reads a <see cref="ReplicaId"/>.</summary>
     /// <returns>The decoded value.</returns>

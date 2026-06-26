@@ -142,7 +142,7 @@ public static class FrameCodec
 
     internal static void ValidateBodyLength(ulong bodyLength, int maxFrameLength)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxFrameLength);
+        Throw.IfNegativeOrZero(maxFrameLength, nameof(maxFrameLength));
 
         if (bodyLength == 0 || bodyLength > (ulong)maxFrameLength || bodyLength > int.MaxValue)
         {
