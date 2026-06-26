@@ -7,8 +7,6 @@ High-performance, **NativeAOT-ready** [Conflict-free Replicated Data Types](http
 
 `Crdt` implements the full catalogue of CRDTs — counters, registers, sets, maps, flags, graphs, and sequence/text types — in **state-based**, **delta-state**, and **operation-based** flavours, with compact binary and `System.Text.Json` source-generated serialization.
 
-> **Status:** pre-release (`0.9.x`). APIs may change before `1.0`.
-
 ## ✨ Why Crdt
 
 - **Strong eventual consistency** without coordination: replicas converge after exchanging state, deltas, or operations.
