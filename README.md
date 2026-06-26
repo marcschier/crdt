@@ -60,15 +60,13 @@ dotnet add package Crdt.Transport.Dtls
 
 ## 📚 Documentation
 
-The full developer guide lives in [`docs/`](https://github.com/marcschier/crdt/tree/master/docs):
-
-- [Getting started](https://github.com/marcschier/crdt/blob/master/docs/getting-started.md) — install, your first counter, merging replicas.
-- [Data types](https://github.com/marcschier/crdt/blob/master/docs/data-types.md) — the full catalogue with usage examples for every CRDT.
-- [Replication models](https://github.com/marcschier/crdt/blob/master/docs/replication-models.md) — state-based, delta-state, and operation-based, and when to use each.
-- [Serialization](https://github.com/marcschier/crdt/blob/master/docs/serialization.md) — the binary and JSON formats, value serializers, and hostile-input limits.
-- [Architecture](https://github.com/marcschier/crdt/blob/master/docs/architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
-- [Performance & NativeAOT](https://github.com/marcschier/crdt/blob/master/docs/performance.md) — AOT compliance, trimming, and benchmarking notes.
-- [Transports](https://github.com/marcschier/crdt/blob/master/docs/transports.md) — the optional `Crdt.Transport` package: in-memory and TCP gossip replication.
+- [Getting started](./docs/getting-started.md) — install, your first counter, merging replicas.
+- [Data types](./docs/data-types.md) — the full catalogue with usage examples for every CRDT.
+- [Replication models](./docs/replication-models.md) — state-based, delta-state, and operation-based, and when to use each.
+- [Serialization](./docs/serialization.md) — the binary and JSON formats, value serializers, and hostile-input limits.
+- [Architecture](./docs/architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
+- [Performance & NativeAOT](./docs/performance.md) — AOT compliance, trimming, and benchmarking notes.
+- [Transports](./docs/transports.md) — the optional `Crdt.Transport` package: in-memory and TCP gossip replication.
 
 ## 🛠️ Building from source
 
