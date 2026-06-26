@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsBenchmarkProject>true</IsBenchmarkProject>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Crdt.Benchmarks</AssemblyName>
+    <RootNamespace>Crdt.Benchmarks</RootNamespace>
+    <!-- BenchmarkDotNet spawns and instruments processes; it runs under the JIT, not AOT. -->
+    <IsAotCompatible>false</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Crdt\Crdt.csproj" />
+  </ItemGroup>
+
+</Project>

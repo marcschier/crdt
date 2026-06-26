@@ -1,0 +1,52 @@
+## .NET / build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+artifacts/
+publish/
+*.user
+*.suo
+*.userprefs
+
+## Test / coverage
+[Tt]est[Rr]esult*/
+coverage/
+*.coverage
+*.coveragexml
+*.cobertura.xml
+TestResults/
+BenchmarkDotNet.Artifacts/
+
+## IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*~
+
+## NuGet
+*.nupkg
+*.snupkg
+.packages/
+**/packages/*
+!**/packages/build/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Native AOT intermediates
+*.ilk
+*.pdb
+*.obj
+
+## Interop harnesses
+node_modules/
+interop/**/dist/
+interop/**/target/
+*.tsbuildinfo

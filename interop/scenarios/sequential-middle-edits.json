@@ -1,0 +1,27 @@
+{
+  "name": "sequential-middle-edits",
+  "initial": "abcdef",
+  "replicas": [
+    {
+      "id": "A",
+      "ops": [
+        {
+          "op": "delete",
+          "index": 2,
+          "length": 2
+        },
+        {
+          "op": "insert",
+          "index": 2,
+          "text": "XY"
+        },
+        {
+          "op": "insert",
+          "index": 0,
+          "text": "!"
+        }
+      ]
+    }
+  ],
+  "mergeSchedule": []
+}

@@ -1,0 +1,31 @@
+{
+  "name": "sequential-basic",
+  "replicas": [
+    {
+      "id": "A",
+      "ops": [
+        {
+          "op": "insert",
+          "index": 0,
+          "text": "Hello"
+        },
+        {
+          "op": "insert",
+          "index": 5,
+          "text": " world"
+        },
+        {
+          "op": "delete",
+          "index": 5,
+          "length": 1
+        },
+        {
+          "op": "insert",
+          "index": 5,
+          "text": ","
+        }
+      ]
+    }
+  ],
+  "mergeSchedule": []
+}

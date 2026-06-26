@@ -1,0 +1,92 @@
+<Project>
+
+  <!-- ───────────────────────────── Project-kind detection (must run before any
+       kind-dependent logic; MSBuildProjectName is available during props eval) ──── -->
+  <PropertyGroup>
+    <IsTestProject Condition="'$(IsTestProject)' == '' AND $(MSBuildProjectName.EndsWith('.Tests'))">true</IsTestProject>
+    <IsBenchmarkProject Condition="'$(IsBenchmarkProject)' == '' AND $(MSBuildProjectName.EndsWith('.Benchmarks'))">true</IsBenchmarkProject>
+    <IsSampleProject Condition="'$(IsSampleProject)' == '' AND $(MSBuildProjectName.Contains('.Sample'))">true</IsSampleProject>
+  </PropertyGroup>
+
+  <!-- ───────────────────────────── Language / compiler ───────────────────────────── -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Features>strict</Features>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <!-- ───────────────────────────── Project-kind flags ───────────────────────────── -->
+  <PropertyGroup>
+    <_IsProductionLibrary Condition="'$(IsTestProject)' != 'true' AND '$(IsSampleProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">true</_IsProductionLibrary>
+  </PropertyGroup>
+
+  <!-- ───────────────────────────── Library (packable) defaults ───────────────────── -->
+  <PropertyGroup>
+    <!-- Generated everywhere so IDE0005 (remove unused usings) can run on build. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(_IsProductionLibrary)' == 'true'">
+    <IsPackable>true</IsPackable>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <DebugType>portable</DebugType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <Authors>marcschier</Authors>
+    <Company>marcschier</Company>
+    <Product>Crdt</Product>
+    <Copyright>Copyright (c) marcschier</Copyright>
+    <PackageProjectUrl>https://github.com/marcschier/crdt</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/marcschier/crdt</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(_IsProductionLibrary)' != 'true'">
+    <IsPackable>false</IsPackable>
+    <!-- Non-shipping projects don't require XML doc comments on public members, and they
+         host generated code (TUnit, Rocks) whose doc comments must not fail the build. -->
+    <NoWarn>$(NoWarn);CS1591;CS1570;CS1571;CS1572;CS1573;CS1574;CS1580;CS1581;CS1584</NoWarn>
+  </PropertyGroup>
+
+  <!-- ───────────────────────────── NativeAOT compatibility (net8+) ───────────────── -->
+  <PropertyGroup Condition="'$(_IsProductionLibrary)' == 'true' AND ('$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net10.0')">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <!-- ───────────────────────────── Shared analyzers ──────────────────────────────── -->
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
+    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Roslynator.Formatting.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- ───────────────────────────── README into package ───────────────────────────── -->
+  <ItemGroup Condition="'$(_IsProductionLibrary)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+
+  <!-- ───────────────────────────── netstandard2.1 polyfills ──────────────────────── -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="PolySharp" PrivateAssets="all" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+    <PackageReference Include="Microsoft.Bcl.TimeProvider" />
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+</Project>

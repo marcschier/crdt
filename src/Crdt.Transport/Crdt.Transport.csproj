@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>Crdt.Transport</AssemblyName>
+    <RootNamespace>Crdt.Transport</RootNamespace>
+    <Description>High-performance, NativeAOT-ready CRDT transport primitives for in-memory, TCP (optional TLS), and UDP anti-entropy gossip replication.</Description>
+    <PackageTags>crdt;gossip;anti-entropy;replication;tcp;udp;tls</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crdt\Crdt.csproj" />
+  </ItemGroup>
+
+</Project>

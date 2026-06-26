@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+
+    <!-- Keep the test project NativeAOT-publishable. -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <!--
+      Drive the AOT test gate via a project-local switch (-p:AotTest=true) instead of
+      passing -p:PublishAot=true on the command line. A global PublishAot property would
+      flow into the multi-targeted Crdt library and fail its netstandard2.1 target
+      (NETSDK1207). Setting PublishAot here keeps it local to this executable.
+    -->
+    <PublishAot Condition="'$(AotTest)' == 'true'">true</PublishAot>
+    <!--
+      During the AOT test publish, trimming pulls in the Rocks runtime assembly, which is not
+      trim-annotated and emits IL2104. The library's own AOT-safety is enforced separately by
+      the IsAotCompatible analyzers at regular build time; here we only need the suite to run
+      natively, so trim warnings from dependencies must not fail the publish.
+    -->
+    <ILLinkTreatWarningsAsErrors Condition="'$(AotTest)' == 'true'">false</ILLinkTreatWarningsAsErrors>
+    <IlcTreatWarningsAsErrors Condition="'$(AotTest)' == 'true'">false</IlcTreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+
+  <!-- Rocks 10 generates code that requires .NET 10, so reference it only there. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="Rocks" />
+  </ItemGroup>
+
+  <!-- Coverage collector breaks `PublishAot`; include it only for JIT runs. -->
+  <ItemGroup Condition="'$(AotTest)' != 'true'">
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Crdt\Crdt.csproj" />
+  </ItemGroup>
+
+</Project>

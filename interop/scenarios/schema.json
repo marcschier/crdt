@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/crdt-interop-scenario.schema.json",
+  "title": "CRDT convergence-parity scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["replicas", "mergeSchedule"],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "initial": {
+      "type": "string",
+      "description": "Optional common prefix applied once, then forked to every replica."
+    },
+    "replicas": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "ops"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+          },
+          "ops": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["op", "index", "text"],
+                  "properties": {
+                    "op": {
+                      "const": "insert"
+                    },
+                    "index": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["op", "index", "length"],
+                  "properties": {
+                    "op": {
+                      "const": "delete"
+                    },
+                    "index": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "length": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "mergeSchedule": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*<-[A-Za-z][A-Za-z0-9_-]*$"
+      }
+    }
+  }
+}

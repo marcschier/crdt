@@ -1,0 +1,25 @@
+# Normalize line endings to LF on commit; check out as-is.
+* text=auto eol=lf
+
+# Explicitly declare text files that should always be LF.
+*.cs       text eol=lf
+*.csproj   text eol=lf
+*.props    text eol=lf
+*.targets  text eol=lf
+*.slnx     text eol=lf
+*.json     text eol=lf
+*.md       text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.ps1      text eol=lf
+*.sh       text eol=lf
+*.editorconfig text eol=lf
+
+# Windows-only scripts keep CRLF.
+*.cmd      text eol=crlf
+*.bat      text eol=crlf
+
+# Binary files.
+*.png      binary
+*.snk      binary
+*.ico      binary

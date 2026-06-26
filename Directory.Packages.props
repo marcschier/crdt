@@ -1,0 +1,40 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <!-- Build / tooling (all projects) -->
+  <ItemGroup>
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.85" />
+    <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
+    <PackageVersion Include="Roslynator.Formatting.Analyzers" Version="4.15.0" />
+  </ItemGroup>
+
+  <!-- netstandard2.1 polyfills (library only) -->
+  <ItemGroup>
+    <PackageVersion Include="PolySharp" Version="1.16.0" />
+    <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+    <PackageVersion Include="Microsoft.Bcl.TimeProvider" Version="10.0.9" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.9" />
+  </ItemGroup>
+
+  <!-- Test stack -->
+  <ItemGroup>
+    <PackageVersion Include="TUnit" Version="1.56.35" />
+    <PackageVersion Include="Rocks" Version="10.3.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.8.0" />
+  </ItemGroup>
+
+  <!-- Benchmarks -->
+  <ItemGroup>
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+  </ItemGroup>
+
+  <!-- Secure transport (DTLS) -->
+  <ItemGroup>
+    <PackageVersion Include="DtlsSharp" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/solution/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="version.json" />
+    <File Path="global.json" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Crdt/Crdt.csproj" />
+    <Project Path="src/Crdt.Transport/Crdt.Transport.csproj" />
+    <Project Path="src/Crdt.Transport.Dtls/Crdt.Transport.Dtls.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Crdt.Tests/Crdt.Tests.csproj" />
+    <Project Path="tests/Crdt.Transport.Tests/Crdt.Transport.Tests.csproj" />
+    <Project Path="tests/Crdt.Transport.Dtls.Tests/Crdt.Transport.Dtls.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Crdt.Samples/Crdt.Samples.csproj" />
+    <Project Path="samples/Crdt.Samples.Gossip/Crdt.Samples.Gossip.csproj" />
+  </Folder>
+</Solution>

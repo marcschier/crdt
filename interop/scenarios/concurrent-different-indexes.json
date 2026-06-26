@@ -1,0 +1,27 @@
+{
+  "name": "concurrent-different-indexes",
+  "initial": "base",
+  "replicas": [
+    {
+      "id": "A",
+      "ops": [
+        {
+          "op": "insert",
+          "index": 0,
+          "text": "L"
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "ops": [
+        {
+          "op": "insert",
+          "index": 4,
+          "text": "R"
+        }
+      ]
+    }
+  ],
+  "mergeSchedule": ["A<-B", "B<-A"]
+}

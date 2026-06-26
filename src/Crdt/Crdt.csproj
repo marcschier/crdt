@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
+    <PackageId>Crdt</PackageId>
+    <RootNamespace>Crdt</RootNamespace>
+    <AssemblyName>Crdt</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Description>High-performance, NativeAOT-ready Conflict-free Replicated Data Types (CRDTs) for modern .NET — state-based, delta-state, and operation-based counters, registers, sets, maps, flags, graphs, and sequence/text types.</Description>
+    <PackageTags>crdt;distributed-systems;replication;eventual-consistency;merge;delta-crdt;operation-based;aot;span;high-performance</PackageTags>
+  </PropertyGroup>
+
+</Project>

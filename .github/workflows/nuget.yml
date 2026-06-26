@@ -1,0 +1,72 @@
+name: nuget
+
+# Manually promotes the most recently published Crdt packages from the repository's GitHub
+# Packages feed to nuget.org using NuGet trusted publishing (OIDC short-lived token — no stored
+# API key). Run this from the Actions tab once a version has been published to GitHub Packages by
+# the tag-triggered CI publish job. Leave "version" blank to promote the latest published version.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to promote (blank = latest published in the GitHub Packages feed)'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Promote to nuget.org
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write   # Required for OIDC (NuGet trusted publishing)
+      contents: read
+      packages: read    # Read the packages from the GitHub Packages feed
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Download packages from GitHub Packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          index=https://nuget.pkg.github.com/marcschier/index.json
+          auth="Authorization: Bearer ${GH_TOKEN}"
+          base=$(curl -fsSL -H "$auth" "$index" \
+            | jq -r '.resources[] | select(."@type"=="PackageBaseAddress/3.0.0") | ."@id"' \
+            | head -n1)
+          base=${base%/}
+          mkdir -p ./download
+          for id in Crdt Crdt.Transport Crdt.Transport.Dtls; do
+            lower=$(echo "$id" | tr '[:upper:]' '[:lower:]')
+            if [ -n "${VERSION}" ]; then
+              ver="${VERSION}"
+            else
+              ver=$(curl -fsSL -H "$auth" "$base/$lower/index.json" | jq -r '.versions | last')
+            fi
+            echo "Promoting $id $ver"
+            curl -fsSL -H "$auth" "$base/$lower/$ver/$lower.$ver.nupkg" \
+              -o "./download/$lower.$ver.nupkg"
+          done
+          ls -l ./download
+
+      - name: NuGet login (OIDC trusted publishing)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to nuget.org
+        run: >
+          dotnet nuget push "./download/*.nupkg"
+          --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

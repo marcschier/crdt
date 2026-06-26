@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "yjs": "^13.6.27"
+  },
+  "scripts": {
+    "self-test": "node index.js --self-test"
+  }
+}

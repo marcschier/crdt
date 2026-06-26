@@ -1,0 +1,188 @@
+name: ci
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: build & test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore Crdt.slnx
+
+      - name: Build
+        run: dotnet build Crdt.slnx -c Release --no-restore
+
+      - name: Verify formatting
+        if: runner.os == 'Linux'
+        run: dotnet format Crdt.slnx --verify-no-changes --no-restore
+
+      - name: Check line length
+        if: runner.os == 'Linux'
+        shell: pwsh
+        run: ./eng/check-line-length.ps1
+
+      - name: Test
+        run: dotnet test Crdt.slnx -c Release --no-build
+
+  aot-test:
+    name: aot test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-latest
+            rid: osx-arm64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Install NativeAOT prerequisites (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Publish test suite as NativeAOT
+        run: >
+          dotnet publish tests/Crdt.Tests/Crdt.Tests.csproj
+          -c Release -f net10.0 -r ${{ matrix.rid }} -p:AotTest=true
+
+      - name: Run native test binary
+        shell: bash
+        run: |
+          exe="tests/Crdt.Tests/bin/Release/net10.0/${{ matrix.rid }}/publish/Crdt.Tests"
+          if [ "${{ runner.os }}" = "Windows" ]; then exe="${exe}.exe"; fi
+          "$exe"
+
+  coverage:
+    name: coverage gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Test with coverage
+        run: >
+          dotnet test tests/Crdt.Tests/Crdt.Tests.csproj -c Release -f net10.0
+          --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml
+
+      - name: Enforce coverage threshold (>= 85% lines)
+        shell: pwsh
+        run: >
+          ./eng/check-coverage.ps1
+          -CoverageFile tests/Crdt.Tests/bin/Release/net10.0/TestResults/coverage.cobertura.xml
+          -MinLineRate 0.85
+
+  interop:
+    name: interop (Yjs convergence parity)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Yjs harness dependencies
+        working-directory: interop/yjs-harness
+        run: npm install
+
+      - name: Yjs harness self-test
+        working-directory: interop/yjs-harness
+        run: node index.js --self-test
+
+      - name: Convergence-parity tests
+        run: dotnet test tests/Crdt.Interop.Tests/Crdt.Interop.Tests.csproj -c Release
+
+  publish-github:
+    name: publish to GitHub Packages
+    needs: [ build-test, aot-test, coverage, interop ]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Nerdbank.GitVersioning needs full history + tags
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Pack
+        run: |
+          dotnet pack src/Crdt/Crdt.csproj -c Release -o artifacts
+          dotnet pack src/Crdt.Transport/Crdt.Transport.csproj -c Release -o artifacts
+          dotnet pack src/Crdt.Transport.Dtls/Crdt.Transport.Dtls.csproj -c Release -o artifacts
+
+      - name: List packages
+        run: ls -l artifacts
+
+      - name: Push to GitHub Packages
+        run: >
+          dotnet nuget push "artifacts/*.nupkg"
+          --source https://nuget.pkg.github.com/marcschier/index.json
+          --api-key ${{ secrets.GITHUB_TOKEN }}
+          --skip-duplicate

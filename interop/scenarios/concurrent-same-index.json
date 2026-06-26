@@ -1,0 +1,27 @@
+{
+  "name": "concurrent-same-index",
+  "initial": "ab",
+  "replicas": [
+    {
+      "id": "A",
+      "ops": [
+        {
+          "op": "insert",
+          "index": 1,
+          "text": "X"
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "ops": [
+        {
+          "op": "insert",
+          "index": 1,
+          "text": "Y"
+        }
+      ]
+    }
+  ],
+  "mergeSchedule": ["A<-B", "B<-A"]
+}
