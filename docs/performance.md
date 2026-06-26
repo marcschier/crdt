@@ -7,7 +7,7 @@ The library is built for low allocation and high throughput:
 - Identity and event types (`ReplicaId`, `Dot`, `Timestamp`) are `readonly struct`s.
 - Serialization is `Span<T>`/`IBufferWriter<byte>` based, with LEB128 varints and pooled buffers; there is no reflection on any hot path.
 - Hot paths avoid LINQ and unnecessary allocation.
-- On .NET 8+ the build uses the runtime's modern primitives (`BinaryPrimitives`, `MemoryMarshal`, `Unsafe`); on `netstandard2.1` the same code paths are kept working through polyfills.
+- On .NET 8+ the build uses the runtime's modern primitives (`BinaryPrimitives`, `MemoryMarshal`, `Unsafe`); on `netstandard2.0` and `netstandard2.1` the same code paths are kept working through polyfills.
 
 ## NativeAOT
 
@@ -20,7 +20,7 @@ dotnet publish tests/Crdt.Tests/Crdt.Tests.csproj -c Release -f net10.0 -r <rid>
 ./tests/Crdt.Tests/bin/Release/net10.0/<rid>/publish/Crdt.Tests
 ```
 
-`netstandard2.1` is a compatibility target for older runtimes (Unity, Mono, .NET Core 3.x) and is not itself NativeAOT-published; AOT applies to the net8/9/10 targets.
+`netstandard2.0` and `netstandard2.1` are compatibility targets for older runtimes (.NET Framework 4.6.1+, Unity, Mono, .NET Core 3.x) and are not themselves NativeAOT-published; AOT applies to the net8/9/10 targets.
 
 ## Notes on complexity
 
