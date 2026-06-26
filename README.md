@@ -1,7 +1,6 @@
 # Crdt
 
-[![CI](https://github.com/marcschier/crdt/actions/workflows/ci.yml/badge.svg)](https://github.com/marcschier/crdt/actions/workflows/ci.yml)
-[![NuGet](https://img.shields.io/nuget/v/Crdt.svg)](https://github.com/marcschier/crdt/packages)
+[![CI](https://github.com/marcschier/crdt/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/marcschier/crdt/actions/workflows/ci.yml) [![NuGet](https://img.shields.io/nuget/v/Crdt?logo=nuget&label=NuGet)](https://www.nuget.org/packages/Crdt) [![GitHub Packages](https://img.shields.io/badge/GitHub%20Packages-Crdt-2088FF?logo=github&logoColor=white)](https://github.com/marcschier/crdt/pkgs/nuget/Crdt)
 
 High-performance, **NativeAOT-ready** [Conflict-free Replicated Data Types](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) (CRDTs) for modern .NET.
 
