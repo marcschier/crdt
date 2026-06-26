@@ -12,12 +12,14 @@
     <PackageVersion Include="Roslynator.Formatting.Analyzers" Version="4.15.0" />
   </ItemGroup>
 
-  <!-- netstandard2.1 polyfills (library only) -->
+  <!-- netstandard polyfills (library only) -->
   <ItemGroup>
     <PackageVersion Include="PolySharp" Version="1.16.0" />
     <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
     <PackageVersion Include="Microsoft.Bcl.TimeProvider" Version="10.0.9" />
     <PackageVersion Include="System.Text.Json" Version="10.0.9" />
+    <PackageVersion Include="System.Memory" Version="4.6.3" />
+    <PackageVersion Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
   </ItemGroup>
 
   <!-- Test stack -->

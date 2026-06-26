@@ -361,7 +361,7 @@ public sealed class LWWElementSet<T> :
             reader.Read();
             if (name == "bias")
             {
-                bias = Enum.Parse<LWWElementSetBias>(reader.GetString() ?? nameof(LWWElementSetBias.AddWins));
+                bias = SpanCompat.ParseEnum<LWWElementSetBias>(reader.GetString() ?? nameof(LWWElementSetBias.AddWins));
             }
             else if (name == "adds")
             {

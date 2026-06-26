@@ -19,6 +19,7 @@ High-performance, **NativeAOT-ready** [Conflict-free Replicated Data Types](http
 | --- | --- |
 | `net10.0`, `net9.0`, `net8.0` | Full feature set; NativeAOT supported. |
 | `netstandard2.1` | Compatibility target (Unity / Mono / .NET Core 3.x) via polyfills; not itself AOT-published. |
+| `netstandard2.0` | Broad compatibility target (.NET Framework 4.6.1+, older Unity / Mono) via `System.Memory` + `Microsoft.Bcl.HashCode` and source polyfills; not AOT-published. |
 
 ## 📦 Install
 
