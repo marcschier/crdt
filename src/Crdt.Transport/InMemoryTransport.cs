@@ -37,13 +37,13 @@ public sealed class InMemoryTransport : ITransport
         ct.ThrowIfCancellationRequested();
         if (_started)
         {
-            return ValueTask.CompletedTask;
+            return default;
         }
 
         _started = true;
         _network.Register(this);
         _pump = PumpAsync(_stop.Token);
-        return ValueTask.CompletedTask;
+        return default;
     }
 
     /// <inheritdoc/>
@@ -55,7 +55,7 @@ public sealed class InMemoryTransport : ITransport
             peer.Enqueue(frame);
         }
 
-        return ValueTask.CompletedTask;
+        return default;
     }
 
     /// <inheritdoc/>

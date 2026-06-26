@@ -45,10 +45,10 @@ public sealed class CrdtReplica<TState>
         Action<TState, TState> mergeDelta)
         : this(value, serializeState, deserializeState)
     {
-        ArgumentNullException.ThrowIfNull(extractDelta);
-        ArgumentNullException.ThrowIfNull(serializeDelta);
-        ArgumentNullException.ThrowIfNull(deserializeDelta);
-        ArgumentNullException.ThrowIfNull(mergeDelta);
+        Throw.IfNull(extractDelta, nameof(extractDelta));
+        Throw.IfNull(serializeDelta, nameof(serializeDelta));
+        Throw.IfNull(deserializeDelta, nameof(deserializeDelta));
+        Throw.IfNull(mergeDelta, nameof(mergeDelta));
 
         _tryGetDeltaBytes = () =>
         {

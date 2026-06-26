@@ -4,7 +4,9 @@ using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
+#if NET8_0_OR_GREATER
 using System.Security.Cryptography.X509Certificates;
+#endif
 
 namespace Crdt.Transport;
 
@@ -69,7 +71,7 @@ public sealed class TcpGossipTransport : ITransport
     /// <param name="endpoint">The peer endpoint.</param>
     public void AddPeer(IPEndPoint endpoint)
     {
-        ArgumentNullException.ThrowIfNull(endpoint);
+        Throw.IfNull(endpoint, nameof(endpoint));
         lock (_gate)
         {
             if (_listener?.LocalEndpoint is IPEndPoint local && SameEndpoint(local, endpoint))
@@ -85,7 +87,7 @@ public sealed class TcpGossipTransport : ITransport
     /// <param name="endpoints">The peer endpoints.</param>
     public void AddPeers(IEnumerable<IPEndPoint> endpoints)
     {
-        ArgumentNullException.ThrowIfNull(endpoints);
+        Throw.IfNull(endpoints, nameof(endpoints));
         foreach (IPEndPoint endpoint in endpoints)
         {
             AddPeer(endpoint);
@@ -98,7 +100,7 @@ public sealed class TcpGossipTransport : ITransport
         ct.ThrowIfCancellationRequested();
         if (_started)
         {
-            return ValueTask.CompletedTask;
+            return default;
         }
 
         _started = true;
@@ -106,7 +108,7 @@ public sealed class TcpGossipTransport : ITransport
         _listener.Start();
         _acceptLoop = AcceptLoopAsync(_stop.Token);
         _gossipLoop = GossipLoopAsync(_stop.Token);
-        return ValueTask.CompletedTask;
+        return default;
     }
 
     /// <inheritdoc/>
@@ -187,15 +189,18 @@ public sealed class TcpGossipTransport : ITransport
     {
         using (client)
         {
+#if NETSTANDARD2_0
+            using NetworkStream network = client.GetStream();
+#else
             await using NetworkStream network = client.GetStream();
+#endif
             SslStream? tls = null;
             try
             {
                 Stream stream = network;
                 if (_options.Tls is { } tlsOptions)
                 {
-                    tls = new SslStream(network, leaveInnerStreamOpen: true);
-                    await AuthenticateServerAsync(tls, tlsOptions, ct).ConfigureAwait(false);
+                    tls = await AuthenticateServerAsync(network, tlsOptions, ct).ConfigureAwait(false);
                     stream = tls;
                 }
 
@@ -212,7 +217,11 @@ public sealed class TcpGossipTransport : ITransport
             {
                 if (tls is not null)
                 {
+#if NETSTANDARD2_0
+                    tls.Dispose();
+#else
                     await tls.DisposeAsync().ConfigureAwait(false);
+#endif
                 }
             }
         }
@@ -225,15 +234,18 @@ public sealed class TcpGossipTransport : ITransport
         try
         {
             await client.ConnectAsync(endpoint.Address, endpoint.Port, ct).ConfigureAwait(false);
+#if NETSTANDARD2_0
+            using NetworkStream network = client.GetStream();
+#else
             await using NetworkStream network = client.GetStream();
+#endif
             try
             {
                 Stream stream = network;
                 if (_options.Tls is { } tlsOptions)
                 {
-                    tls = new SslStream(network, leaveInnerStreamOpen: true);
                     string targetHost = tlsOptions.TargetHost ?? endpoint.Address.ToString();
-                    await AuthenticateClientAsync(tls, tlsOptions, targetHost, ct).ConfigureAwait(false);
+                    tls = await AuthenticateClientAsync(network, tlsOptions, targetHost, ct).ConfigureAwait(false);
                     stream = tls;
                 }
 
@@ -246,7 +258,11 @@ public sealed class TcpGossipTransport : ITransport
             {
                 if (tls is not null)
                 {
+#if NETSTANDARD2_0
+                    tls.Dispose();
+#else
                     await tls.DisposeAsync().ConfigureAwait(false);
+#endif
                 }
             }
         }
@@ -275,7 +291,7 @@ public sealed class TcpGossipTransport : ITransport
     private IPEndPoint? PickPeer()
     {
         IPEndPoint[] peers = SnapshotPeers();
-        return peers.Length == 0 ? null : peers[Random.Shared.Next(peers.Length)];
+        return peers.Length == 0 ? null : peers[SharedRandom.Next(peers.Length)];
     }
 
     private static async ValueTask<byte[]> ReadFrameAsync(
@@ -344,11 +360,13 @@ public sealed class TcpGossipTransport : ITransport
         }
     }
 
-    private static async Task AuthenticateServerAsync(
-        SslStream tls,
+    private static async Task<SslStream> AuthenticateServerAsync(
+        NetworkStream inner,
         GossipTlsOptions options,
         CancellationToken ct)
     {
+#if NET8_0_OR_GREATER
+        var tls = new SslStream(inner, leaveInnerStreamOpen: true);
         var authOptions = new SslServerAuthenticationOptions
         {
             ServerCertificate = options.ServerCertificate,
@@ -367,14 +385,32 @@ public sealed class TcpGossipTransport : ITransport
         }
 
         await tls.AuthenticateAsServerAsync(authOptions, ct).ConfigureAwait(false);
+        return tls;
+#else
+        // netstandard SslStream has no options-based API: the validation callback is supplied through
+        // the constructor, and only when a client certificate is required.
+        RemoteCertificateValidationCallback? validation =
+            options.RequireClientCertificate ? options.RemoteCertificateValidationCallback : null;
+        SslStream tls = validation is null
+            ? new SslStream(inner, leaveInnerStreamOpen: true)
+            : new SslStream(inner, leaveInnerStreamOpen: true, validation);
+        await tls.AuthenticateAsServerAsync(
+            options.ServerCertificate!,
+            options.RequireClientCertificate,
+            options.EnabledSslProtocols,
+            options.CheckCertificateRevocation).ConfigureAwait(false);
+        return tls;
+#endif
     }
 
-    private static async Task AuthenticateClientAsync(
-        SslStream tls,
+    private static async Task<SslStream> AuthenticateClientAsync(
+        NetworkStream inner,
         GossipTlsOptions options,
         string targetHost,
         CancellationToken ct)
     {
+#if NET8_0_OR_GREATER
+        var tls = new SslStream(inner, leaveInnerStreamOpen: true);
         var authOptions = new SslClientAuthenticationOptions
         {
             TargetHost = targetHost,
@@ -387,6 +423,18 @@ public sealed class TcpGossipTransport : ITransport
         };
 
         await tls.AuthenticateAsClientAsync(authOptions, ct).ConfigureAwait(false);
+        return tls;
+#else
+        SslStream tls = options.RemoteCertificateValidationCallback is null
+            ? new SslStream(inner, leaveInnerStreamOpen: true)
+            : new SslStream(inner, leaveInnerStreamOpen: true, options.RemoteCertificateValidationCallback);
+        await tls.AuthenticateAsClientAsync(
+            targetHost,
+            options.ClientCertificates,
+            options.EnabledSslProtocols,
+            options.CheckCertificateRevocation).ConfigureAwait(false);
+        return tls;
+#endif
     }
 
     private static bool IsNetworkFailure(Exception ex, CancellationToken ct) =>
