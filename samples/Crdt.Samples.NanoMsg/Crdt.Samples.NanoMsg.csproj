@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <!--
+      Optional NativeAOT smoke of the NanoMsg transport stack: publish with -p:AotSmoke=true.
+      Setting PublishAot here (gated, project-local) keeps it from propagating into the
+      multi-targeted Crdt libraries and failing their netstandard targets (NETSDK1207).
+    -->
+    <PublishAot Condition="'$(AotSmoke)' == 'true'">true</PublishAot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Crdt\Crdt.csproj" />
+    <ProjectReference Include="..\..\src\Crdt.Transport\Crdt.Transport.csproj" />
+    <ProjectReference Include="..\..\src\Crdt.Transport.NanoMsg\Crdt.Transport.NanoMsg.csproj" />
+  </ItemGroup>
+
+</Project>

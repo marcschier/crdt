@@ -45,6 +45,12 @@ MQTT broker gossip (built on [Mqtt.Client](https://www.nuget.org/packages/Mqtt.C
 dotnet add package Crdt.Transport.Mqtt
 ```
 
+Peer-to-peer gossip over the nanomsg/NNG **BUS** scalability protocol (built on [NanoMsgSharp](https://www.nuget.org/packages/NanoMsgSharp), pure-managed, no broker) — over TCP, TLS, IPC, WebSockets, or in-process — ships as another opt-in package:
+
+```shell
+dotnet add package Crdt.Transport.NanoMsg
+```
+
 ## 🧩 CRDT catalogue
 
 | Family | Types |
@@ -78,7 +84,7 @@ The `Counters`, `Sets`, `Trees`, `Documents`, `Sequences`, and `Causal clocks` r
 - [Serialization](./docs/serialization.md) — the binary and JSON formats, value serializers, and hostile-input limits.
 - [Architecture](./docs/architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
 - [Performance & NativeAOT](./docs/performance.md) — AOT compliance, trimming, and benchmarking notes.
-- [Transports](./docs/transports.md) — the optional `Crdt.Transport` package: in-memory, TCP/UDP, DTLS-secured, and MQTT broker gossip replication.
+- [Transports](./docs/transports.md) — the optional `Crdt.Transport` package: in-memory, TCP/UDP, DTLS-secured, MQTT broker, and nanomsg/NNG BUS gossip replication.
 
 ## 🛠️ Building from source
 
