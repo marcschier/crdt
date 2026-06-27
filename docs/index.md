@@ -6,11 +6,12 @@
 
 - [Getting started](getting-started.md) — install, your first counter, merging replicas.
 - [Data types](data-types.md) — the full catalogue with usage examples for every CRDT.
+- [Choosing a data type](choosing-data-types.md) — when to use which type, when not to, and rough performance/resource cost.
 - [Replication models](replication-models.md) — state-based, delta-state, and operation-based, and when to use each.
 - [Serialization](serialization.md) — the binary and JSON formats, value serializers, and hostile-input limits.
 - [Architecture](architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
 - [Performance & NativeAOT](performance.md) — AOT compliance, trimming, and benchmarking notes.
-- [Transports](transports.md) — the optional `Crdt.Transport` package: in-memory and TCP gossip replication.
+- [Transports](transports.md) — the optional transport packages: in-memory, TCP/UDP, DTLS-secured, MQTT broker, and nanomsg/NNG BUS gossip replication.
 
 ## The one-paragraph mental model
 

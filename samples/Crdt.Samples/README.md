@@ -1,18 +1,21 @@
 # Crdt.Samples
 
-A self-contained console walkthrough of core CRDT merge semantics — **no networking**. Three replicas are created in-process, mutated independently, and reconciled with `Merge`, showing that the result is the same regardless of the order or duplication of exchanges.
+A self-contained console **tour of every CRDT** in the library — **no networking**. For each type, independent in-process replicas are mutated and then reconciled with `Merge`, showing that the result is the same regardless of the order or duplication of exchanges. It doubles as a smoke test of the whole public API.
 
 ## What it demonstrates
 
-- **PN-Counter cluster (state-based).** Three nodes each apply local increments/decrements, then exchange full state and converge to a single total.
-- **OR-Set (add-wins).** A concurrent add and remove of the same element resolve to *add wins* — the element survives.
-- **Collaborative text.** Two people edit the same `Text` document concurrently (an insertion and an append); their edits converge to one identical string on both replicas.
+One labelled line per type, grouped by family — including the advanced/esoteric types:
+
+- **Counters** — `GCounter`, `PNCounter`, `BCounter` (escrow/bounded), `ResettableCounter` (observed reset), `HandoffCounter` (tiered fan-in).
+- **Sets** — `GSet`, `TwoPhaseSet`, `LWWElementSet`, `ORSet`, `CausalLengthSet`.
+- **Registers, maps, flags** — `LWWRegister`, `MVRegister`, `LWWMap`, `ORMap` (of `GCounter`), `GFlag`, `EnableWinsFlag`, `DisableWinsFlag`.
+- **Graphs** — `TwoPTwoPGraph`, `AddOnlyDag` (with a topological sort).
+- **Sequences and text** — the six interchangeable algorithms (`Rga`, `LogootSequence`, `LSeqSequence`, `TreedocSequence`, `YataSequence`, `WootSequence`), `Text`, and `FugueSequence`.
+- **Trees, documents, clocks** — `ReplicatedTree`, `JsonCrdt`, `IntervalTreeClock`.
 
 ## How it works
 
-Each scenario builds plain CRDT values (`PNCounter`, `ORSet<string>`, `Text`), mutates them on separate "replicas", and then merges. Replication is faked by a trivial in-process helper, `gossipState`, that merges every node's state into every other node — enough to show convergence without a transport. Serialization is shown along the way: binary via `ToByteArray`/`ReadFrom` (with a value serializer such as `CrdtValues.String`) and JSON via `ToJson`/`FromJson`.
-
-There is no network and no persistence here; the goal is to make the algebra of merging visible.
+Each family lives in its own file (`CounterSamples.cs`, `SetSamples.cs`, …). A demo builds plain CRDT values, mutates them on separate "replicas", and merges — replication is faked by calling `Merge` directly, which is enough to show convergence without a transport. There is no network and no persistence; the goal is to make the algebra of merging visible across the entire catalogue.
 
 ## Run it
 
@@ -27,30 +30,59 @@ dotnet run --project samples/Crdt.Samples -c Release
 ### Expected output
 
 ```text
-=== Crdt samples ===
+=== Crdt data-type tour ===
+Each line shows independent replicas mutating, then merging to a converged value.
 
--- PN-Counter cluster (state-based) --
-  node value = 12
-  node value = 12
-  node value = 12
-  converged value = 12 (expected 12)
+## Counters
+  GCounter          -> 8 (expected 8)
+  PNCounter         -> 7 (expected 7)
+  BCounter          -> 6 (>= min 0, expected 6)
+  ResettableCounter -> 2 (the concurrent +2 survives the reset)
+  HandoffCounter    -> 3 (expected 3)
 
--- OR-Set (add-wins over concurrent remove) --
-  alice contains 'feature-x' = True
-  bob   contains 'feature-x' = True
-  (add wins — the element survives)
+## Sets
+  GSet              -> {a, b} (union)
+  TwoPhaseSet       -> contains 'x' = False (remove wins, forever)
+  LWWElementSet     -> contains 'x' = True (latest write wins)
+  ORSet             -> contains 'tag' = True (add wins over concurrent remove)
+  CausalLengthSet   -> contains 'x' = True (re-add without tombstones)
 
--- Collaborative text --
-  alice sees: "the quick brown fox jumps"
-  bob   sees: "the quick brown fox jumps"
-  identical  = True
+## Registers, maps, and flags
+  LWWRegister       -> "second" (later write wins)
+  MVRegister        -> {x, y} (concurrent values kept)
+  LWWMap            -> count = 2 (latest write)
+  ORMap             -> visits = 4 (value is a merged GCounter)
+  GFlag             -> True (true wins, one-way)
+  EnableWinsFlag    -> True (enable wins the tie)
+  DisableWinsFlag   -> False (disable wins the tie)
+
+## Graphs
+  TwoPTwoPGraph     -> 3 vertices, 2 edges (converged)
+  AddOnlyDag        -> order [a -> b -> c], cycle = False
+
+## Sequences and text
+  Rga               -> [one, three, two] (converged, 3 items)
+  LogootSequence    -> [one, two, three] (converged, 3 items)
+  LSeqSequence      -> [one, two, three] (converged, 3 items)
+  TreedocSequence   -> [one, two, three] (converged, 3 items)
+  YataSequence      -> [one, two, three] (converged, 3 items)
+  WootSequence      -> [one, two, three] (converged, 3 items)
+  Text              -> "Hello world"
+  FugueSequence     -> "Hi"
+
+## Trees, documents, and causal clocks
+  ReplicatedTree    -> 2 nodes; 'report' parent = documents
+  JsonCrdt          -> {"title":"Hello","views":1}
+  IntervalTreeClock -> after fork + event: (y <= x) = True; rejoin <= itself = True
 
 All replicas converged. ✓
 ```
 
+The exact converged order of the sequence algorithms is each algorithm's own deterministic result — replicas of the *same* type always agree, but different algorithms may resolve concurrent inserts differently (note `Rga` above).
+
 ## Further reading
 
+- [Choosing a data type](../../docs/choosing-data-types.md) — when to use which type, and rough cost.
 - [Data types](../../docs/data-types.md) — every CRDT with usage examples.
 - [Replication models](../../docs/replication-models.md) — state-based, delta-state, and operation-based.
-- [Serialization](../../docs/serialization.md) — the binary and JSON formats.
-- For a version that replicates over a real network transport, see [`Crdt.Samples.Gossip`](../Crdt.Samples.Gossip).
+- For versions that replicate over a real network transport, see [`Crdt.Samples.Gossip`](../Crdt.Samples.Gossip), [`Crdt.Samples.Mqtt`](../Crdt.Samples.Mqtt), and [`Crdt.Samples.NanoMsg`](../Crdt.Samples.NanoMsg).
