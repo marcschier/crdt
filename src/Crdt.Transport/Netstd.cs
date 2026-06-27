@@ -3,6 +3,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #if !NET8_0_OR_GREATER
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -123,6 +124,18 @@ internal static class NetstandardNetworkPolyfills
 
         return new ArraySegment<byte>(memory.ToArray());
     }
+}
+
+/// <summary>
+/// netstandard polyfill for the compare-and-remove <see cref="ConcurrentDictionary{TKey, TValue}"/>
+/// overload that exists in-box on net8+. Removes the entry only when its current value matches.
+/// </summary>
+internal static class NetstandardConcurrentPolyfills
+{
+    public static bool TryRemove<TKey, TValue>(
+        this ConcurrentDictionary<TKey, TValue> dictionary,
+        KeyValuePair<TKey, TValue> item) =>
+        ((ICollection<KeyValuePair<TKey, TValue>>)dictionary).Remove(item);
 }
 #endif
 

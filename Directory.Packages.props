@@ -39,7 +39,7 @@
 
   <!-- Secure transport (DTLS) -->
   <ItemGroup>
-    <PackageVersion Include="DtlsSharp" Version="1.0.0" />
+    <PackageVersion Include="DtlsSharp" Version="1.0.1" />
   </ItemGroup>
 
   <!-- MQTT transport -->

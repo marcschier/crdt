@@ -106,6 +106,8 @@ Set `RequireClientCertificate` and `ClientCertificates` for mutual TLS; the `Rem
 
 `DtlsGossipTransport`, in the separate opt-in package **`Crdt.Transport.Dtls`** (built on [DtlsSharp](https://github.com/marcschier/dtls)), is the DTLS-secured counterpart to `UdpGossipTransport`. Each peer pair is protected by a DTLS session: outbound frames travel over a client session (`DtlsClient`), and inbound datagrams are demultiplexed by remote endpoint and accepted as per-peer server sessions (`DtlsServer`). The core `Crdt.Transport` package stays dependency-free.
 
+Like the core package and `Crdt.Transport.Mqtt`, it targets the full set — `netstandard2.0`, `netstandard2.1`, `net8.0`, `net9.0`, and `net10.0` (the netstandard builds are polyfilled; `net8.0`+ output is unaffected).
+
 ```shell
 dotnet add package Crdt.Transport.Dtls
 ```
