@@ -39,6 +39,12 @@ DTLS-secured datagram gossip (built on [DtlsSharp](https://github.com/marcschier
 dotnet add package Crdt.Transport.Dtls
 ```
 
+MQTT broker gossip (built on [Mqtt.Client](https://www.nuget.org/packages/Mqtt.Client)) — for replicas that reach each other through an MQTT 3.1.1/5.0 broker rather than peer-to-peer — ships as another opt-in package:
+
+```shell
+dotnet add package Crdt.Transport.Mqtt
+```
+
 ## 🧩 CRDT catalogue
 
 | Family | Types |
@@ -72,7 +78,7 @@ The `Counters`, `Sets`, `Trees`, `Documents`, `Sequences`, and `Causal clocks` r
 - [Serialization](./docs/serialization.md) — the binary and JSON formats, value serializers, and hostile-input limits.
 - [Architecture](./docs/architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
 - [Performance & NativeAOT](./docs/performance.md) — AOT compliance, trimming, and benchmarking notes.
-- [Transports](./docs/transports.md) — the optional `Crdt.Transport` package: in-memory and TCP gossip replication.
+- [Transports](./docs/transports.md) — the optional `Crdt.Transport` package: in-memory, TCP/UDP, DTLS-secured, and MQTT broker gossip replication.
 
 ## 🛠️ Building from source
 

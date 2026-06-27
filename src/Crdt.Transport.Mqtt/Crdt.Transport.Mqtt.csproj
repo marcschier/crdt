@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>Crdt.Transport.Mqtt</AssemblyName>
+    <RootNamespace>Crdt.Transport.Mqtt</RootNamespace>
+    <Description>MQTT pub/sub gossip transport for Crdt.Transport, built on the Mqtt.Client package (MQTT 3.1.1/5.0, TCP/TLS/WebSocket).</Description>
+    <PackageTags>crdt;gossip;anti-entropy;replication;mqtt;pubsub;broker</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crdt.Transport\Crdt.Transport.csproj" />
+    <PackageReference Include="Mqtt.Client" />
+  </ItemGroup>
+
+  <!-- netstandard async/channel dependencies (Span/PolySharp/Unsafe come from Directory.Build.props). -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Threading.Channels" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" />
+  </ItemGroup>
+
+</Project>
