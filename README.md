@@ -4,7 +4,7 @@
 
 High-performance, **NativeAOT-ready** [Conflict-free Replicated Data Types](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) (CRDTs) for modern .NET.
 
-`Crdt` implements the full catalogue of CRDTs — counters, registers, sets, maps, flags, graphs, and sequence/text types — in **state-based**, **delta-state**, and **operation-based** flavours, with compact binary and `System.Text.Json` source-generated serialization.
+`Crdt` implements the full catalogue of CRDTs — counters, registers, sets, maps, flags, graphs, trees, JSON documents, and sequence/text types — in **state-based**, **delta-state**, and **operation-based** flavours, with compact binary and `System.Text.Json` source-generated serialization. It also includes advanced/esoteric variants (bounded, resettable, and handoff counters, causal-length sets, a tree with move, Fugue, and interval tree clocks).
 
 ## ✨ Why Crdt
 
@@ -43,13 +43,18 @@ dotnet add package Crdt.Transport.Dtls
 
 | Family | Types |
 | --- | --- |
-| Counters | `GCounter`, `PNCounter` |
+| Counters | `GCounter`, `PNCounter`, `BCounter`, `ResettableCounter`, `HandoffCounter` |
 | Registers | `LWWRegister<T>`, `MVRegister<T>` |
-| Sets | `GSet<T>`, `TwoPhaseSet<T>`, `LWWElementSet<T>`, `ORSet<T>` |
+| Sets | `GSet<T>`, `TwoPhaseSet<T>`, `LWWElementSet<T>`, `ORSet<T>`, `CausalLengthSet<T>` |
 | Maps | `ORMap<TKey,TValue>`, `LWWMap<TKey,TValue>` |
 | Flags | `EnableWinsFlag`, `DisableWinsFlag`, `GFlag` |
 | Graphs | `TwoPTwoPGraph`, `AddOnlyDag` |
-| Sequences / Text | `Rga<T>`, `LogootSequence<T>`, `LSeqSequence<T>`, `TreedocSequence<T>`, `YataSequence<T>`, `WootSequence<T>`, `Text` |
+| Trees | `ReplicatedTree` (highly-available move) |
+| Documents | `JsonCrdt` (nested JSON) |
+| Sequences / Text | `Rga<T>`, `LogootSequence<T>`, `LSeqSequence<T>`, `TreedocSequence<T>`, `YataSequence<T>`, `WootSequence<T>`, `FugueSequence<T>`, `Text` |
+| Causal clocks | `HybridLogicalClock`, `VersionVector`, `IntervalTreeClock` |
+
+The `Counters`, `Sets`, `Trees`, `Documents`, `Sequences`, and `Causal clocks` rows include several **advanced / esoteric CRDTs** (bounded, resettable, and handoff counters; causal-length set; tree-with-move; JSON document; Fugue; interval tree clocks). See [Advanced / esoteric CRDTs](./docs/data-types.md#advanced--esoteric-crdts) for what each one is for.
 
 ## 🔁 Replication models
 
