@@ -139,6 +139,49 @@ transport.AddPeer(peerEndPoint);
 
 As with the plaintext UDP transport, each frame is one datagram (bounded by `MaxDatagramSize`) and delivery is best-effort; convergence is driven by the periodic gossip loop.
 
+## MQTT broker gossip
+
+`MqttGossipTransport`, in the separate opt-in package **`Crdt.Transport.Mqtt`** (built on [Mqtt.Client](https://www.nuget.org/packages/Mqtt.Client)), replicates frames through an MQTT broker instead of peer-to-peer. It is a natural fit when replicas cannot reach each other directly but can all reach a broker (MQTT 3.1.1/5.0 over TCP, TLS, or WebSockets). The core `Crdt.Transport` package stays dependency-free.
+
+```shell
+dotnet add package Crdt.Transport.Mqtt
+```
+
+Each replica **publishes** its frames to its own subtopic, `{TopicRoot}/{ClientId}`, and **subscribes** to a single-level wildcard over the shared root, `{TopicRoot}/+`, ignoring messages whose last topic segment is its own client id. The broker fans every frame out to the other replicas, so there is no peer list to maintain:
+
+```csharp
+var transport = new MqttGossipTransport(new MqttGossipTransportOptions
+{
+    BrokerUri = "mqtt://broker.internal:1883",  // mqtt / mqtts / ws / wss
+    TopicRoot = "crdt/gossip",                  // shared by every replica in the group
+    ClientId = "node-a",                        // unique per replica; also the publish subtopic
+    Qos = MqttQoS.AtLeastOnce,                  // QoS 1 retries until acknowledged
+});
+await transport.StartAsync();                   // connects and subscribes
+```
+
+`ClientId` must be a single topic segment (no `/`, `+`, or `#`) and unique per broker connection; `TopicRoot` must not contain the wildcards `+` or `#`. A frame may not exceed `MaxFrameLength`; `SendAsync` throws `ArgumentException` for larger frames.
+
+By default each frame is published **retained** (`RetainLastFrame`), so a late-joining replica immediately receives every peer's most recent state when it subscribes — a broker-native form of anti-entropy that pairs well with state mode. Set `RetainLastFrame = false` to publish without retention.
+
+Authentication and secure transports are configured either through the discrete `Username`/`Password` options or through the `ConfigureClient` hook, which exposes the underlying `Mqtt.Client` builder for TLS, a SOCKS5 proxy, a reconnect policy, keep-alive, or logging:
+
+```csharp
+var transport = new MqttGossipTransport(new MqttGossipTransportOptions
+{
+    BrokerUri = "mqtts://broker.internal:8883",
+    TopicRoot = "crdt/gossip",
+    ClientId = "node-a",
+    Username = "gossip",
+    Password = secret,
+    ConfigureClient = builder => builder
+        .WithTls(tls => { /* certificate validation, client cert, ... */ })
+        .WithKeepAlive(30),
+});
+```
+
+Self-delivery is avoided by the subtopic-and-filter scheme, so the transport works against both MQTT 3.1.1 and 5.0 brokers without relying on the MQTT 5 *No Local* flag. Even if a frame were redelivered to its publisher, CRDT merges are idempotent, so convergence is unaffected.
+
 ## Modes
 
 State mode is the simplest and most robust choice: every message carries a complete snapshot and merges are idempotent. Delta mode reduces bandwidth for CRDTs that implement `IDeltaConvergent<TState,TDelta>`; the application supplies the extraction and merge delegates. Operation mode is for CRDT operation payloads that are already idempotent, such as `PNCounterOperation`; the engine applies each operation through the caller's delegate.

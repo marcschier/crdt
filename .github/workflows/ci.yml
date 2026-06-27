@@ -151,9 +151,40 @@ jobs:
       - name: Convergence-parity tests
         run: dotnet test tests/Crdt.Interop.Tests/Crdt.Interop.Tests.csproj -c Release
 
+  mqtt:
+    name: mqtt (broker gossip)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Start Mosquitto broker
+        run: |
+          printf 'listener 1883 0.0.0.0\nallow_anonymous true\n' > mosquitto.conf
+          docker run -d --name mosquitto -p 1883:1883 \
+            -v "$PWD/mosquitto.conf:/mosquitto/config/mosquitto.conf" \
+            eclipse-mosquitto:2
+          for i in $(seq 1 30); do
+            if (exec 3<>/dev/tcp/localhost/1883) 2>/dev/null; then echo "broker ready"; break; fi
+            sleep 1
+          done
+
+      - name: MQTT transport tests (with broker)
+        env:
+          CRDT_MQTT_BROKER: localhost:1883
+        run: dotnet test tests/Crdt.Transport.Mqtt.Tests/Crdt.Transport.Mqtt.Tests.csproj -c Release
+
   publish-github:
     name: publish to GitHub Packages
-    needs: [ build-test, aot-test, coverage, interop ]
+    needs: [ build-test, aot-test, coverage, interop, mqtt ]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -176,6 +207,7 @@ jobs:
           dotnet pack src/Crdt/Crdt.csproj -c Release -o artifacts
           dotnet pack src/Crdt.Transport/Crdt.Transport.csproj -c Release -o artifacts
           dotnet pack src/Crdt.Transport.Dtls/Crdt.Transport.Dtls.csproj -c Release -o artifacts
+          dotnet pack src/Crdt.Transport.Mqtt/Crdt.Transport.Mqtt.csproj -c Release -o artifacts
 
       - name: List packages
         run: ls -l artifacts

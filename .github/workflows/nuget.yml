@@ -45,7 +45,7 @@ jobs:
             | head -n1)
           base=${base%/}
           mkdir -p ./download
-          for id in Crdt Crdt.Transport Crdt.Transport.Dtls; do
+          for id in Crdt Crdt.Transport Crdt.Transport.Dtls Crdt.Transport.Mqtt; do
             lower=$(echo "$id" | tr '[:upper:]' '[:lower:]')
             if [ -n "${VERSION}" ]; then
               ver="${VERSION}"
