@@ -150,7 +150,9 @@ public sealed partial class ReplicatedTree :
         return _tree.TryGetValue(node, out (string Parent, string Meta) entry) ? entry.Parent : null;
     }
 
-    /// <summary>Determines whether <paramref name="maybeAncestor"/> is an ancestor of <paramref name="node"/>.</summary>
+    /// <summary>
+    /// Determines whether <paramref name="maybeAncestor"/> is an ancestor of <paramref name="node"/>.
+    /// </summary>
     /// <param name="maybeAncestor">The possible ancestor node id.</param>
     /// <param name="node">The node whose parent chain is walked.</param>
     /// <returns><see langword="true"/> if the parent chain reaches <paramref name="maybeAncestor"/>.</returns>

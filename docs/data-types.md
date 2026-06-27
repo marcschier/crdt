@@ -205,3 +205,103 @@ doc.Append(me, "Hello");
 doc.Insert(me, 5, " world");
 string s = doc.Value; // "Hello world"
 ```
+
+## Advanced / esoteric CRDTs
+
+Specialized, research-grade CRDTs for advanced scenarios. Each supports state-based `Merge` plus compact binary and `System.Text.Json` serialization; several also expose an operation-based API. Unlike the core catalogue, not every advanced type implements all three replication models — the notes below call out the supported ones.
+
+### `BCounter` — bounded counter (escrow)
+
+A counter that supports increments and decrements while guaranteeing the value never drops below a configured lower bound, even under concurrency. Each replica owns a number of decrement *rights*; spare rights can be transferred to another replica so it can decrement locally. Operation-based and state-based.
+
+```csharp
+var c = new BCounter(min: 0);     // value can never drop below 0
+c.Increment(alice, 10);
+c.TryDecrement(alice, 4, out _);  // succeeds: alice owns enough rights
+long value = c.Value;             // 6
+c.TryTransfer(alice, bob, 3, out _); // hand 3 rights to bob so he can decrement
+```
+
+### `ResettableCounter` — resettable PN-counter
+
+A positive-negative counter with an observed-reset. Each contribution is stored under a unique dot; `Reset()` removes exactly the contributions observed at reset time, so increments made concurrently with the reset survive. Operation-based and state-based.
+
+```csharp
+var c = new ResettableCounter();
+c.Increment(me, 5);
+c.Decrement(me, 2);
+c.Reset();             // removes observed contributions
+long value = c.Value;  // 0 — contributions concurrent with the reset still count
+```
+
+### `HandoffCounter` — handoff counter
+
+A counter designed for large, tiered topologies (for example many edge clients aggregating into fewer servers). Tier-0 nodes hand their counts off to higher-tier aggregators on merge, bounding the metadata each node must carry. State-based.
+
+```csharp
+var client = new HandoffCounter(clientId, tier: 0);
+client.Increment(3);
+var server = new HandoffCounter(serverId, tier: 1);
+server.Merge(client);        // the client hands its count to the aggregator
+ulong value = server.Value;  // 3
+```
+
+### `CausalLengthSet<T>` — causal-length set
+
+A set that supports repeated add/remove cycles without tombstone sets. Each element carries a monotonically increasing causal length: odd means present, even means absent, and merge keeps the maximum length per element. Operation-based and state-based.
+
+```csharp
+var set = new CausalLengthSet<string>();
+set.Add("x");
+set.Remove("x");
+set.Add("x");                     // re-add works without accumulating tombstones
+bool present = set.Contains("x"); // true
+```
+
+### `ReplicatedTree` — tree with move
+
+A replicated tree supporting a highly-available `Move` operation. Moves are replayed in timestamp order with the undo/do/redo algorithm of Kleppmann et al.; a concurrent move that would introduce a cycle is deterministically skipped on every replica. Operation-based.
+
+```csharp
+var tree = new ReplicatedTree(me);
+tree.Move("documents", "root", "Documents");
+tree.Move("report", "documents", "Q3 Report");
+// a concurrent move that would create a cycle is skipped identically everywhere
+IReadOnlyDictionary<string, (string Parent, string Meta)> nodes = tree.Nodes;
+```
+
+### `FugueSequence<T>` — non-interleaving sequence
+
+A FugueMax tree sequence whose visible order is a deterministic in-order traversal. Fugue guarantees *maximal non-interleaving*: characters typed concurrently by different replicas are never shuffled together. State-based with idempotent operation application.
+
+```csharp
+var seq = new FugueSequence<char>(me);
+seq.InsertAt(0, 'H');
+seq.Append('i');
+string text = seq.Text; // "Hi" — concurrent runs never interleave
+```
+
+### `JsonCrdt` — JSON document
+
+A nested JSON document CRDT composed of maps, lists (ordered by an RGA), and last-writer-wins register leaves. Edits address nodes by a path of map keys and stable list-element ids. Operation-based with full state merge. (v1: object/array/primitive leaves, numbers as `double`.)
+
+```csharp
+var clock = new HybridLogicalClock(me);
+var doc = new JsonCrdt();
+doc.SetString(me, clock.Now(), "title", "Hello");
+doc.SetNumber(me, clock.Now(), "views", 1);
+doc.SetArray(me, clock.Now(), Array.Empty<JsonPathSegment>(), "tags");
+JsonNode root = doc.Root; // structured tree of maps, lists, and registers
+```
+
+### `IntervalTreeClock` — interval tree clock
+
+A compact causal clock (Almeida, Baquero, Fonte) whose identity can be **forked** and **joined** without assigning globally unique replica ids — well suited to dynamic populations where replicas come and go. Provides `Fork`/`Event`/`Join` and a causal `Compare`/`Leq`. State-based.
+
+```csharp
+var seed = IntervalTreeClock.Seed(); // (1, 0)
+var (a, b) = seed.Fork();            // two disjoint identities, shared history
+a = a.Event();                       // record a local event on a
+bool seen = b.Leq(a);                // true: a has observed at least as much as b
+var joined = a.Join(b);              // recombine identity and event history
+```

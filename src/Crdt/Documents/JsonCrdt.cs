@@ -111,7 +111,11 @@ public sealed partial class JsonCrdt :
     /// <param name="path">The target map path.</param>
     /// <param name="key">The property key.</param>
     /// <returns>The operation to broadcast.</returns>
-    public JsonOperation SetNull(ReplicaId replica, Timestamp timestamp, IEnumerable<JsonPathSegment> path, string key) =>
+    public JsonOperation SetNull(
+        ReplicaId replica,
+        Timestamp timestamp,
+        IEnumerable<JsonPathSegment> path,
+        string key) =>
         SetKey(replica, timestamp, path, key, JsonLiteral.PrimitiveValue(JsonPrimitive.Null));
 
     /// <summary>Sets an object property on a map node.</summary>
@@ -120,7 +124,11 @@ public sealed partial class JsonCrdt :
     /// <param name="path">The target map path.</param>
     /// <param name="key">The property key.</param>
     /// <returns>The operation to broadcast.</returns>
-    public JsonOperation SetObject(ReplicaId replica, Timestamp timestamp, IEnumerable<JsonPathSegment> path, string key) =>
+    public JsonOperation SetObject(
+        ReplicaId replica,
+        Timestamp timestamp,
+        IEnumerable<JsonPathSegment> path,
+        string key) =>
         SetKey(replica, timestamp, path, key, JsonLiteral.EmptyObject);
 
     /// <summary>Sets an array property on a map node.</summary>
@@ -129,7 +137,11 @@ public sealed partial class JsonCrdt :
     /// <param name="path">The target map path.</param>
     /// <param name="key">The property key.</param>
     /// <returns>The operation to broadcast.</returns>
-    public JsonOperation SetArray(ReplicaId replica, Timestamp timestamp, IEnumerable<JsonPathSegment> path, string key) =>
+    public JsonOperation SetArray(
+        ReplicaId replica,
+        Timestamp timestamp,
+        IEnumerable<JsonPathSegment> path,
+        string key) =>
         SetKey(replica, timestamp, path, key, JsonLiteral.EmptyArray);
 
     /// <summary>Sets a literal property on a map node.</summary>
@@ -166,7 +178,11 @@ public sealed partial class JsonCrdt :
     /// <param name="path">The target list path.</param>
     /// <param name="value">The literal value.</param>
     /// <returns>The operation to broadcast.</returns>
-    public JsonOperation Push(ReplicaId replica, Timestamp timestamp, IEnumerable<JsonPathSegment> path, JsonLiteral value) =>
+    public JsonOperation Push(
+        ReplicaId replica,
+        Timestamp timestamp,
+        IEnumerable<JsonPathSegment> path,
+        JsonLiteral value) =>
         InsertAfter(replica, timestamp, path, LastElementId(path), value);
 
     /// <summary>Inserts a literal into a list after an element id, or at the head for default.</summary>
@@ -195,7 +211,11 @@ public sealed partial class JsonCrdt :
     /// <param name="path">The target map path.</param>
     /// <param name="key">The key to delete.</param>
     /// <returns>The operation to broadcast.</returns>
-    public JsonOperation DeleteKey(ReplicaId replica, Timestamp timestamp, IEnumerable<JsonPathSegment> path, string key)
+    public JsonOperation DeleteKey(
+        ReplicaId replica,
+        Timestamp timestamp,
+        IEnumerable<JsonPathSegment> path,
+        string key)
     {
         Dot dot = _version.Increment(replica);
         var removed = new List<Dot>();
@@ -215,7 +235,11 @@ public sealed partial class JsonCrdt :
     /// <param name="path">The target list path.</param>
     /// <param name="elementId">The element id to delete.</param>
     /// <returns>The operation to broadcast.</returns>
-    public JsonOperation DeleteIndex(ReplicaId replica, Timestamp timestamp, IEnumerable<JsonPathSegment> path, Dot elementId)
+    public JsonOperation DeleteIndex(
+        ReplicaId replica,
+        Timestamp timestamp,
+        IEnumerable<JsonPathSegment> path,
+        Dot elementId)
     {
         Dot dot = _version.Increment(replica);
         var operation = JsonOperation.DeleteIndex(dot, timestamp, path, elementId);
@@ -296,7 +320,10 @@ public sealed partial class JsonCrdt :
         JsonNode? node = Navigate(operation.Path);
         if (operation.Kind == JsonOperationKind.SetKey && node is MapNode map && operation.Value is not null)
         {
-            return map.ApplySet(operation.Key, BuildNode(operation.Value, operation.Dot, operation.Timestamp), operation.Dot);
+            return map.ApplySet(
+                operation.Key,
+                BuildNode(operation.Value, operation.Dot, operation.Timestamp),
+                operation.Dot);
         }
 
         if (operation.Kind == JsonOperationKind.DeleteKey && node is MapNode deleteMap)
@@ -306,7 +333,10 @@ public sealed partial class JsonCrdt :
 
         if (operation.Kind == JsonOperationKind.InsertAfter && node is ListNode list && operation.Value is not null)
         {
-            return list.ApplyInsert(operation.ElementId, operation.AfterElementId, BuildNode(operation.Value, operation.Dot, operation.Timestamp));
+            return list.ApplyInsert(
+                operation.ElementId,
+                operation.AfterElementId,
+                BuildNode(operation.Value, operation.Dot, operation.Timestamp));
         }
 
         if (operation.Kind == JsonOperationKind.DeleteIndex && node is ListNode deleteList)

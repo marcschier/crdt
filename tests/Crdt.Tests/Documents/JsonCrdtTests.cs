@@ -17,7 +17,12 @@ public sealed class JsonCrdtTests
         doc.SetNumber(A, Ts(1, 1), "n", 1D);
         doc.SetArray(A, Ts(2, 1), Array.Empty<JsonPathSegment>(), "users");
         JsonOperation user = doc.PushObject(A, Ts(3, 1), Path("users"));
-        doc.SetString(A, Ts(4, 1), [JsonPathSegment.MapKey("users"), JsonPathSegment.ListElement(user.ElementId)], "name", "a");
+        doc.SetString(
+            A,
+            Ts(4, 1),
+            [JsonPathSegment.MapKey("users"), JsonPathSegment.ListElement(user.ElementId)],
+            "name",
+            "a");
 
         await Assert.That(doc.ToJson()).IsEqualTo("""{"n":1,"users":[{"name":"a"}]}""");
     }
@@ -61,7 +66,8 @@ public sealed class JsonCrdtTests
         left.SetArray(A, Ts(1, 1), Array.Empty<JsonPathSegment>(), "items");
         JsonCrdt right = left.Clone();
 
-        JsonOperation insert = left.Push(A, Ts(2, 1), Path("items"), JsonLiteral.PrimitiveValue(JsonPrimitive.String("x")));
+        JsonOperation insert = left.Push(
+            A, Ts(2, 1), Path("items"), JsonLiteral.PrimitiveValue(JsonPrimitive.String("x")));
         right.Apply(insert);
         right.DeleteIndex(B, Ts(3, 2), Path("items"), insert.ElementId);
         left.Merge(right);

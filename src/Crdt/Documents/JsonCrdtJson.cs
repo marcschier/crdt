@@ -41,7 +41,8 @@ public sealed partial class JsonCrdt
         var crdt = new JsonCrdt();
         foreach (JsonProperty property in SortedProperties(document.RootElement))
         {
-            crdt.SetKey(replica, timestamp, Array.Empty<JsonPathSegment>(), property.Name, LiteralFromJson(property.Value));
+            crdt.SetKey(
+                replica, timestamp, Array.Empty<JsonPathSegment>(), property.Name, LiteralFromJson(property.Value));
         }
 
         return crdt;

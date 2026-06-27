@@ -449,7 +449,9 @@ public sealed partial class JsonCrdt
 
         public override bool Equals(JsonNode? other)
         {
-            if (other is not ListNode list || list._entries.Count != _entries.Count || list._deleted.Count != _deleted.Count)
+            if (other is not ListNode list
+                || list._entries.Count != _entries.Count
+                || list._deleted.Count != _deleted.Count)
             {
                 return false;
             }

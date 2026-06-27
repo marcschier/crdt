@@ -293,7 +293,8 @@ public sealed class JsonLiteral : IEquatable<JsonLiteral>, IBinaryWritable
     public JsonLiteralKind Kind { get; }
 
     /// <summary>Gets an empty object literal.</summary>
-    public static JsonLiteral EmptyObject { get; } = Object(global::System.Array.Empty<KeyValuePair<string, JsonLiteral>>());
+    public static JsonLiteral EmptyObject { get; } =
+        Object(global::System.Array.Empty<KeyValuePair<string, JsonLiteral>>());
 
     /// <summary>Gets an empty array literal.</summary>
     public static JsonLiteral EmptyArray { get; } = Array(global::System.Array.Empty<JsonLiteral>());
@@ -311,7 +312,11 @@ public sealed class JsonLiteral : IEquatable<JsonLiteral>, IBinaryWritable
     /// <param name="primitive">The primitive value.</param>
     /// <returns>The literal.</returns>
     public static JsonLiteral PrimitiveValue(JsonPrimitive primitive) =>
-        new(JsonLiteralKind.Primitive, primitive, global::System.Array.Empty<KeyValuePair<string, JsonLiteral>>(), global::System.Array.Empty<JsonLiteral>());
+        new(
+            JsonLiteralKind.Primitive,
+            primitive,
+            global::System.Array.Empty<KeyValuePair<string, JsonLiteral>>(),
+            global::System.Array.Empty<JsonLiteral>());
 
     /// <summary>Creates an object literal.</summary>
     /// <param name="properties">The object properties.</param>
@@ -321,7 +326,8 @@ public sealed class JsonLiteral : IEquatable<JsonLiteral>, IBinaryWritable
         Throw.IfNull(properties);
         var list = new List<KeyValuePair<string, JsonLiteral>>(properties);
         list.Sort(static (left, right) => string.CompareOrdinal(left.Key, right.Key));
-        return new JsonLiteral(JsonLiteralKind.Object, JsonPrimitive.Null, list, global::System.Array.Empty<JsonLiteral>());
+        return new JsonLiteral(
+            JsonLiteralKind.Object, JsonPrimitive.Null, list, global::System.Array.Empty<JsonLiteral>());
     }
 
     /// <summary>Creates an array literal.</summary>
@@ -392,7 +398,8 @@ public sealed class JsonLiteral : IEquatable<JsonLiteral>, IBinaryWritable
             var properties = new List<KeyValuePair<string, JsonLiteral>>(count);
             for (int i = 0; i < count; i++)
             {
-                properties.Add(new KeyValuePair<string, JsonLiteral>(reader.ReadString() ?? string.Empty, Read(ref reader)));
+                properties.Add(
+                    new KeyValuePair<string, JsonLiteral>(reader.ReadString() ?? string.Empty, Read(ref reader)));
             }
 
             return Object(properties);
@@ -731,7 +738,8 @@ public sealed class JsonOperation : IEquatable<JsonOperation>, IBinaryWritable
     {
         if (other is null || Kind != other.Kind || Dot != other.Dot || Timestamp != other.Timestamp
             || !string.Equals(Key, other.Key, StringComparison.Ordinal) || ElementId != other.ElementId
-            || AfterElementId != other.AfterElementId || !EqualityComparer<JsonLiteral?>.Default.Equals(Value, other.Value)
+            || AfterElementId != other.AfterElementId
+            || !EqualityComparer<JsonLiteral?>.Default.Equals(Value, other.Value)
             || !Primitive.Equals(other.Primitive) || _path.Count != other._path.Count
             || _removedDots.Count != other._removedDots.Count)
         {
