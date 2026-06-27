@@ -47,4 +47,9 @@
     <PackageVersion Include="Mqtt.Client" Version="1.0.2" />
   </ItemGroup>
 
+  <!-- Scalability-protocols (nanomsg/NNG) transport -->
+  <ItemGroup>
+    <PackageVersion Include="NanoMsgSharp" Version="1.0.0" />
+  </ItemGroup>
+
 </Project>

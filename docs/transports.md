@@ -184,6 +184,26 @@ var transport = new MqttGossipTransport(new MqttGossipTransportOptions
 
 Self-delivery is avoided by the subtopic-and-filter scheme, so the transport works against both MQTT 3.1.1 and 5.0 brokers without relying on the MQTT 5 *No Local* flag. Even if a frame were redelivered to its publisher, CRDT merges are idempotent, so convergence is unaffected.
 
+## Scalability protocols (BUS)
+
+`NanoMsgBusTransport`, in the separate opt-in package **`Crdt.Transport.NanoMsg`** (built on [NanoMsgSharp](https://www.nuget.org/packages/NanoMsgSharp), a pure-managed nanomsg/NNG implementation), replicates frames over the **BUS** scalability protocol — a peer-to-peer, many-to-many broadcast mesh. It needs no broker and no native dependency, and works over any NanoMsgSharp transport scheme: `tcp://`, `tls+tcp://`, `ipc://`, `ws://`, `wss://`, or `inproc://`.
+
+```shell
+dotnet add package Crdt.Transport.NanoMsg
+```
+
+Each replica binds a local endpoint and dials its peers; `SendAsync` broadcasts every frame to all directly connected peers, and BUS does not echo a node's own sends, so there is nothing to filter. Use a `tcp://…:0` bind to let the OS assign a port and read it back from `BoundPort`:
+
+```csharp
+var a = new NanoMsgBusTransport(new NanoMsgBusTransportOptions { BindAddress = "tcp://127.0.0.1:0" });
+var b = new NanoMsgBusTransport(new NanoMsgBusTransportOptions { BindAddress = "tcp://127.0.0.1:0" });
+await a.StartAsync();
+await b.StartAsync();
+a.AddPeer($"tcp://127.0.0.1:{b.BoundPort}");   // one connection per pair is bidirectional
+```
+
+A frame may not exceed `MaxFrameLength`; `SendAsync` throws `ArgumentException` for larger frames. TLS (`tls+tcp://`, `wss://`), timeouts, watermarks, and message-size limits are configured through the underlying `NanoSocketOptions` on `SocketOptions`. BUS delivers only to directly connected peers (no multi-hop forwarding), so peers should form a connected mesh; the application's broadcast cadence then drives convergence. `Connect` dials in the background and reconnects automatically.
+
 ## Modes
 
 State mode is the simplest and most robust choice: every message carries a complete snapshot and merges are idempotent. Delta mode reduces bandwidth for CRDTs that implement `IDeltaConvergent<TState,TDelta>`; the application supplies the extraction and merge delegates. Operation mode is for CRDT operation payloads that are already idempotent, such as `PNCounterOperation`; the engine applies each operation through the caller's delegate.
