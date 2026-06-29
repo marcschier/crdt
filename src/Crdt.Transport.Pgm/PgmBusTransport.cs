@@ -1,7 +1,10 @@
 // Copyright (c) marcschier. Licensed under the MIT License.
 
+using System.Net;
 using Pgm;
 using Pgm.Net;
+using Pgm.Packets;
+using Pgm.Sender;
 
 namespace Crdt.Transport.Pgm;
 
@@ -16,10 +19,11 @@ namespace Crdt.Transport.Pgm;
 public sealed class PgmBusTransport : ITransport
 {
     private static readonly Lazy<InMemoryMulticastBus> SharedInMemoryBus = new(CreateInMemoryBus);
+    private static int _nextSourcePort = 7_499;
 
     private readonly PgmBusTransportOptions _options;
     private readonly CancellationTokenSource _stop = new();
-    private PgmPublisher? _publisher;
+    private PgmSender? _publisher;
     private PgmSubscriber? _subscriber;
     private Task? _receiveLoop;
     private int _started;
@@ -49,7 +53,7 @@ public sealed class PgmBusTransport : ITransport
             return;
         }
 
-        PgmPublisher? publisher = null;
+        PgmSender? publisher = null;
         PgmSubscriber? subscriber = null;
         try
         {
@@ -83,13 +87,13 @@ public sealed class PgmBusTransport : ITransport
 
         FrameCodec.Decode(frame, _options.MaxFrameLength);
 
-        PgmPublisher? publisher = Volatile.Read(ref _publisher);
+        PgmSender? publisher = Volatile.Read(ref _publisher);
         if (publisher is null)
         {
             throw new InvalidOperationException("The transport has not started.");
         }
 
-        await publisher.PublishAsync(frame, ct).ConfigureAwait(false);
+        await publisher.SendAsync(frame, ct).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -164,35 +168,41 @@ public sealed class PgmBusTransport : ITransport
         return new InMemoryMulticastBus();
     }
 
-    private (PgmPublisher Publisher, PgmSubscriber Subscriber) CreateEndpoints()
+    private (PgmSender Publisher, PgmSubscriber Subscriber) CreateEndpoints()
     {
-        PgmPublisherOptions publisherOptions = CreatePublisherOptions();
+        PgmSenderOptions publisherOptions = CreatePublisherOptions();
         PgmSubscriberOptions subscriberOptions = CreateSubscriberOptions();
 
         if (_options.InMemoryBus is not null || _options.UseInMemoryBus)
         {
             InMemoryMulticastBus bus = _options.InMemoryBus ?? SharedInMemoryBus.Value;
             return (
-                new PgmPublisher(bus.CreateChannel(), publisherOptions),
+                new PgmSender(bus.CreateChannel(), publisherOptions),
                 new PgmSubscriber(bus.CreateChannel(), subscriberOptions));
         }
 
         if (_options.PublisherChannel is not null && _options.SubscriberChannel is not null)
         {
             return (
-                new PgmPublisher(_options.PublisherChannel, publisherOptions),
+                new PgmSender(_options.PublisherChannel, publisherOptions),
                 new PgmSubscriber(_options.SubscriberChannel, subscriberOptions));
         }
 
-        return (new PgmPublisher(publisherOptions), new PgmSubscriber(subscriberOptions));
+        return (
+            new PgmSender(
+                new UdpMulticastChannel(_options.MulticastGroup, _options.Port),
+                publisherOptions),
+            new PgmSubscriber(subscriberOptions));
     }
 
-    private PgmPublisherOptions CreatePublisherOptions()
+    private PgmSenderOptions CreatePublisherOptions()
     {
-        return new PgmPublisherOptions
+        return new PgmSenderOptions
         {
-            MulticastGroup = _options.MulticastGroup,
-            Port = _options.Port,
+            SourcePort = NextSourcePort(),
+            SourceAddress = ToPgmAddress(LoopbackFor(_options.MulticastGroup)),
+            GroupAddress = ToPgmAddress(_options.MulticastGroup),
+            ProactiveParityPacketCount = 0,
         };
     }
 
@@ -203,6 +213,33 @@ public sealed class PgmBusTransport : ITransport
             MulticastGroup = _options.MulticastGroup,
             Port = _options.Port,
         };
+    }
+
+    private static ushort NextSourcePort()
+    {
+        int sourcePort = Interlocked.Increment(ref _nextSourcePort);
+        if (sourcePort > ushort.MaxValue)
+        {
+            sourcePort = 7_500;
+            Interlocked.Exchange(ref _nextSourcePort, sourcePort);
+        }
+
+        return (ushort)sourcePort;
+    }
+
+    private static IPAddress LoopbackFor(IPAddress multicastGroup)
+    {
+        return multicastGroup.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6
+            ? IPAddress.IPv6Loopback
+            : IPAddress.Loopback;
+    }
+
+    private static PgmNetworkAddress ToPgmAddress(IPAddress address)
+    {
+        PgmAddressFamily family = address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
+            ? PgmAddressFamily.IPv4
+            : PgmAddressFamily.IPv6;
+        return new PgmNetworkAddress(family, address.GetAddressBytes());
     }
 
     private async Task ReceiveLoopAsync(PgmSubscriber subscriber, CancellationToken ct)

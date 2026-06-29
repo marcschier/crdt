@@ -21,11 +21,13 @@
     <Project Path="tests/Crdt.Transport.Dtls.Tests/Crdt.Transport.Dtls.Tests.csproj" />
     <Project Path="tests/Crdt.Transport.Mqtt.Tests/Crdt.Transport.Mqtt.Tests.csproj" />
     <Project Path="tests/Crdt.Transport.NanoMsg.Tests/Crdt.Transport.NanoMsg.Tests.csproj" />
+    <Project Path="tests/Crdt.Transport.Pgm.Tests/Crdt.Transport.Pgm.Tests.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/Crdt.Samples/Crdt.Samples.csproj" />
     <Project Path="samples/Crdt.Samples.Gossip/Crdt.Samples.Gossip.csproj" />
     <Project Path="samples/Crdt.Samples.Mqtt/Crdt.Samples.Mqtt.csproj" />
     <Project Path="samples/Crdt.Samples.NanoMsg/Crdt.Samples.NanoMsg.csproj" />
+    <Project Path="samples/Crdt.Samples.Pgm/Crdt.Samples.Pgm.csproj" />
   </Folder>
 </Solution>
