@@ -51,6 +51,12 @@ Peer-to-peer gossip over the nanomsg/NNG **BUS** scalability protocol (built on 
 dotnet add package Crdt.Transport.NanoMsg
 ```
 
+PGM reliable multicast (built on [Pgm](https://www.nuget.org/packages/Pgm), pure-managed RFC 3208 multicast) ships as another opt-in package:
+
+```shell
+dotnet add package Crdt.Transport.Pgm
+```
+
 ## 🧩 CRDT catalogue
 
 | Family | Types |
@@ -85,7 +91,7 @@ The `Counters`, `Sets`, `Trees`, `Documents`, `Sequences`, and `Causal clocks` r
 - [Serialization](./docs/serialization.md) — the binary and JSON formats, value serializers, and hostile-input limits.
 - [Architecture](./docs/architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
 - [Performance & NativeAOT](./docs/performance.md) — AOT compliance, trimming, and benchmarking notes.
-- [Transports](./docs/transports.md) — the optional `Crdt.Transport` package: in-memory, TCP/UDP, DTLS-secured, MQTT broker, and nanomsg/NNG BUS gossip replication.
+- [Transports](./docs/transports.md) — the optional `Crdt.Transport` package: in-memory, TCP/UDP, DTLS-secured, MQTT broker, nanomsg/NNG BUS, and PGM multicast gossip replication.
 
 ## 🛠️ Building from source
 

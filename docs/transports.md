@@ -204,6 +204,29 @@ a.AddPeer($"tcp://127.0.0.1:{b.BoundPort}");   // one connection per pair is bid
 
 A frame may not exceed `MaxFrameLength`; `SendAsync` throws `ArgumentException` for larger frames. TLS (`tls+tcp://`, `wss://`), timeouts, watermarks, and message-size limits are configured through the underlying `NanoSocketOptions` on `SocketOptions`. BUS delivers only to directly connected peers (no multi-hop forwarding), so peers should form a connected mesh; the application's broadcast cadence then drives convergence. `Connect` dials in the background and reconnects automatically.
 
+## PGM reliable multicast
+
+`PgmBusTransport`, in the separate opt-in package **`Crdt.Transport.Pgm`** (built on [Pgm](https://www.nuget.org/packages/Pgm), a pure-managed PGM/RFC 3208 implementation), replicates frames over reliable multicast. Every replica publishes CRDT frames to one multicast group and receives frames from the same group, so there is no broker and no peer list to maintain.
+
+```shell
+dotnet add package Crdt.Transport.Pgm
+```
+
+Configure every replica with the same multicast group and UDP port:
+
+```csharp
+var transport = new PgmBusTransport(new PgmBusTransportOptions
+{
+    MulticastGroup = IPAddress.Parse("239.192.0.42"),
+    Port = 7500,
+});
+await transport.StartAsync();
+```
+
+A frame may not exceed `MaxFrameLength`; `SendAsync` throws `ArgumentException` for larger frames. `PgmBusTransport` validates every outbound and inbound frame with `FrameCodec`. For deterministic process-local tests, set `InMemoryBus` to a shared `InMemoryMulticastBus` (or set `UseInMemoryBus = true` to use the transport's shared bus); the transport creates one publisher channel and one subscriber channel from that bus.
+
+PGM repairs dropped packets within the publisher's transmit window and preserves ordering per publisher. Multicast environments may also deliver a node's own publication back to its subscriber; CRDT merges are idempotent, so self-delivery does not affect convergence.
+
 ## Modes
 
 State mode is the simplest and most robust choice: every message carries a complete snapshot and merges are idempotent. Delta mode reduces bandwidth for CRDTs that implement `IDeltaConvergent<TState,TDelta>`; the application supplies the extraction and merge delegates. Operation mode is for CRDT operation payloads that are already idempotent, such as `PNCounterOperation`; the engine applies each operation through the caller's delegate.

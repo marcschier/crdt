@@ -13,6 +13,7 @@
     <Project Path="src/Crdt.Transport.Dtls/Crdt.Transport.Dtls.csproj" />
     <Project Path="src/Crdt.Transport.Mqtt/Crdt.Transport.Mqtt.csproj" />
     <Project Path="src/Crdt.Transport.NanoMsg/Crdt.Transport.NanoMsg.csproj" />
+    <Project Path="src/Crdt.Transport.Pgm/Crdt.Transport.Pgm.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Crdt.Tests/Crdt.Tests.csproj" />
