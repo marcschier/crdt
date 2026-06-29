@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\src\Crdt.Transport\Crdt.Transport.csproj" />
     <ProjectReference Include="..\..\src\Crdt.Transport.Mqtt\Crdt.Transport.Mqtt.csproj" />
     <ProjectReference Include="..\..\src\Crdt.Transport.NanoMsg\Crdt.Transport.NanoMsg.csproj" />
+    <ProjectReference Include="..\..\src\Crdt.Transport.Pgm\Crdt.Transport.Pgm.csproj" />
   </ItemGroup>
 
 </Project>

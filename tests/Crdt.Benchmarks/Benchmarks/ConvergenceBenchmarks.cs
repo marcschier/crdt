@@ -7,6 +7,8 @@ using BenchmarkDotNet.Attributes;
 using Crdt.Transport;
 using Crdt.Transport.Mqtt;
 using Crdt.Transport.NanoMsg;
+using Crdt.Transport.Pgm;
+using Pgm.Net;
 
 namespace Crdt.Benchmarks;
 
@@ -23,6 +25,7 @@ public enum ConvergenceTransport
     Tcp,
     Udp,
     NanoMsg,
+    Pgm,
     Mqtt,
 }
 
@@ -46,6 +49,7 @@ public abstract class ConvergenceBenchmarks
             yield return ConvergenceTransport.Tcp;
             yield return ConvergenceTransport.Udp;
             yield return ConvergenceTransport.NanoMsg;
+            yield return ConvergenceTransport.Pgm;
 
             if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("CRDT_MQTT_BROKER")))
             {
@@ -467,6 +471,7 @@ internal sealed class ConvergenceCluster<TState> : IAsyncDisposable
             ConvergenceTransport.Tcp => await StartTcpAsync(replicaCount, convergenceCase),
             ConvergenceTransport.Udp => await StartUdpAsync(replicaCount, convergenceCase),
             ConvergenceTransport.NanoMsg => await StartNanoMsgAsync(replicaCount, convergenceCase),
+            ConvergenceTransport.Pgm => await StartPgmAsync(replicaCount, convergenceCase),
             ConvergenceTransport.Mqtt => await StartMqttAsync(replicaCount, convergenceCase),
             _ => throw new ArgumentOutOfRangeException(nameof(transport), transport, null),
         };
@@ -634,6 +639,33 @@ internal sealed class ConvergenceCluster<TState> : IAsyncDisposable
         }
     }
 
+    private static async Task<ConvergenceCluster<TState>> StartPgmAsync(
+        int replicaCount,
+        ConvergenceCase<TState> convergenceCase)
+    {
+        var bus = new InMemoryMulticastBus();
+        List<PgmBusTransport> transports = [];
+        List<ReplicationEngine<TState>> engines = [];
+        try
+        {
+            for (int i = 0; i < replicaCount; i++)
+            {
+                var transport = new PgmBusTransport(new PgmBusTransportOptions { InMemoryBus = bus });
+                await transport.StartAsync();
+                transports.Add(transport);
+                engines.Add(CreateEngine(convergenceCase, transport));
+            }
+
+            return new ConvergenceCluster<TState>(ConvergenceTransport.Pgm, engines, null);
+        }
+        catch
+        {
+            await DisposeAllAsync(engines);
+            await DisposeAllAsync(transports);
+            throw;
+        }
+    }
+
     private static async Task<ConvergenceCluster<TState>> StartMqttAsync(
         int replicaCount,
         ConvergenceCase<TState> convergenceCase)
@@ -716,6 +748,7 @@ internal sealed class ConvergenceCluster<TState> : IAsyncDisposable
         }
 
         TimeSpan delay = _transport is ConvergenceTransport.NanoMsg or ConvergenceTransport.Mqtt
+            or ConvergenceTransport.Pgm
             ? TimeSpan.FromMilliseconds(25)
             : TimeSpan.FromMilliseconds(5);
         await Task.Delay(delay, cancellationToken);
