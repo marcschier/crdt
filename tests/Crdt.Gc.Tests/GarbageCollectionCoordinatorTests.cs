@@ -143,9 +143,16 @@ public sealed class GarbageCollectionCoordinatorTests
             }
         }
 
-        public ValueTask DrainAsync()
+        public async ValueTask DrainAsync()
         {
-            return _network.DrainAsync();
+            // Consensus completes proposals on asynchronous continuations (RunContinuationsAsynchronously),
+            // so a single network drain can return before the commit/apply round is enqueued. Drain
+            // repeatedly, yielding between passes, until the network stays idle across several passes.
+            for (int round = 0; round < 32; round++)
+            {
+                await _network.DrainAsync();
+                await Task.Delay(5);
+            }
         }
 
         public async ValueTask DisposeAsync()

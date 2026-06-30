@@ -1,7 +1,6 @@
 // Copyright (c) marcschier. Licensed under the MIT License.
 
 using System.Buffers.Binary;
-using Crdt.Consensus;
 using Crdt.Transport;
 
 namespace Crdt.Consensus.Raft;
@@ -47,10 +46,14 @@ public sealed class CrdtRaftTransport : global::Raft.Transport.IRaftTransport
         int maxFrameLength = FrameCodec.DefaultMaxFrameLength)
     {
         _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+#if NET8_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(registry);
+#else
         if (registry is null)
         {
             throw new ArgumentNullException(nameof(registry));
         }
+#endif
         ValidateTransport(_transport);
 
         if (maxFrameLength <= 0)

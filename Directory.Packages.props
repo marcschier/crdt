@@ -26,10 +26,10 @@
   </ItemGroup>
 
   <!-- Raft consensus -->
-  <!-- Placeholder versions pending RaftCs publication to nuget.org. -->
+  <!-- Raft consensus (marcschier/raft-cs). -->
   <ItemGroup>
-    <PackageVersion Include="RaftCs" Version="0.9.0" />
-    <PackageVersion Include="RaftCs.Transport" Version="0.9.0" />
+    <PackageVersion Include="RaftCs" Version="1.0.0" />
+    <PackageVersion Include="RaftCs.Transport" Version="1.0.0" />
   </ItemGroup>
 
   <!-- Test stack -->

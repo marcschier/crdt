@@ -1,7 +1,5 @@
 // Copyright (c) marcschier. Licensed under the MIT License.
 
-using Crdt.Consensus;
-
 namespace Crdt.Consensus.Raft;
 
 /// <summary>Maintains the bijection between CRDT replica ids and Raft node ids.</summary>

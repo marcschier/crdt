@@ -210,6 +210,9 @@ jobs:
           dotnet pack src/Crdt.Transport.Mqtt/Crdt.Transport.Mqtt.csproj -c Release -o artifacts
           dotnet pack src/Crdt.Transport.NanoMsg/Crdt.Transport.NanoMsg.csproj -c Release -o artifacts
           dotnet pack src/Crdt.Transport.Pgm/Crdt.Transport.Pgm.csproj -c Release -o artifacts
+          dotnet pack src/Crdt.Consensus/Crdt.Consensus.csproj -c Release -o artifacts
+          dotnet pack src/Crdt.Consensus.Raft/Crdt.Consensus.Raft.csproj -c Release -o artifacts
+          dotnet pack src/Crdt.Gc/Crdt.Gc.csproj -c Release -o artifacts
 
       - name: List packages
         run: ls -l artifacts

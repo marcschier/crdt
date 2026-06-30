@@ -1,7 +1,5 @@
 // Copyright (c) marcschier. Licensed under the MIT License.
 
-using Crdt.Consensus;
-
 namespace Crdt.Consensus.Raft;
 
 /// <summary>Default in-memory <see cref="IReplicaIdRegistry"/> implementation.</summary>

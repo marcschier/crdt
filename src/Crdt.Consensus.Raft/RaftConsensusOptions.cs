@@ -1,6 +1,5 @@
 // Copyright (c) marcschier. Licensed under the MIT License.
 
-using Crdt.Consensus;
 using Crdt.Transport;
 
 namespace Crdt.Consensus.Raft;
@@ -55,9 +54,6 @@ public sealed class RaftConsensusOptions
 
     /// <summary>Gets or sets the wall-clock interval between logical Raft ticks.</summary>
     public TimeSpan TickInterval { get; set; } = TimeSpan.FromMilliseconds(50);
-
-    /// <summary>Gets or sets the interval used to poll RaftCs state because no state-changed event exists.</summary>
-    public TimeSpan StatePollingInterval { get; set; } = TimeSpan.FromMilliseconds(100);
 
     /// <summary>Gets or sets the maximum accepted encoded CRDT transport frame body length in bytes.</summary>
     public int MaxFrameLength { get; set; } = FrameCodec.DefaultMaxFrameLength;

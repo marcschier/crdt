@@ -12,7 +12,6 @@
     <ProjectReference Include="..\Crdt.Consensus\Crdt.Consensus.csproj" />
     <ProjectReference Include="..\Crdt.Transport\Crdt.Transport.csproj" />
     <PackageReference Include="RaftCs" />
-    <PackageReference Include="RaftCs.Transport" />
   </ItemGroup>
 
   <!-- netstandard async dependencies (Span/PolySharp/Unsafe come from Directory.Build.props). -->
