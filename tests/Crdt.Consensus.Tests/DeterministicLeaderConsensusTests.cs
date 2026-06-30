@@ -64,6 +64,54 @@ public sealed class DeterministicLeaderConsensusTests
         await Assert.That(committedC.Select(e => e.ToArray()).ToArray()).IsEquivalentTo([new byte[] { 1, 2, 3 }]);
     }
 
+    [Test]
+    public async Task ProposeAsync_OnFollower_ReturnsFalse()
+    {
+        var bus = new InProcessMessageBus();
+        await using var detector = new ManualFailureDetector(B, A, B, C);
+        await using DeterministicLeaderConsensus follower = CreateConsensus(B, detector, bus);
+
+        bool committed = await follower.ProposeAsync(new byte[] { 9 });
+
+        await Assert.That(follower.IsLeader).IsFalse();
+        await Assert.That(committed).IsFalse();
+    }
+
+    [Test]
+    public async Task ProposeAsync_SingleMemberLeader_CommitsLocally()
+    {
+        var bus = new InProcessMessageBus();
+        await using var detector = new ManualFailureDetector(A, A);
+        await using DeterministicLeaderConsensus consensus = CreateConsensus(A, detector, bus);
+        List<byte[]> committed = [];
+        consensus.EntryCommitted += entry => committed.Add(entry.ToArray());
+
+        bool result = await consensus.ProposeAsync(new byte[] { 7 });
+
+        await Assert.That(consensus.IsLeader).IsTrue();
+        await Assert.That(result).IsTrue();
+        await Assert.That(committed.Select(e => e.ToArray()).ToArray()).IsEquivalentTo([new byte[] { 7 }]);
+    }
+
+    [Test]
+    public async Task Constructor_Rejects_Missing_Required_Options()
+    {
+        var bus = new InProcessMessageBus();
+        await using var detector = new ManualFailureDetector(A, A);
+
+        await Assert.That(() => new DeterministicLeaderConsensus(null!)).Throws<ArgumentNullException>();
+        await Assert.That(() => new DeterministicLeaderConsensus(new DeterministicLeaderConsensusOptions
+        {
+            LocalReplicaId = A,
+            Transport = bus.CreateEndpoint(A),
+        })).Throws<ArgumentException>();
+        await Assert.That(() => new DeterministicLeaderConsensus(new DeterministicLeaderConsensusOptions
+        {
+            LocalReplicaId = A,
+            FailureDetector = detector,
+        })).Throws<ArgumentException>();
+    }
+
     private static DeterministicLeaderConsensus CreateConsensus(
         ReplicaId localReplicaId,
         IFailureDetector detector,
