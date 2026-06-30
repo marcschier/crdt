@@ -6,10 +6,6 @@
     <RootNamespace>Crdt.Consensus.Raft</RootNamespace>
     <Description>Raft-backed Crdt.Consensus implementation using the RaftCs library.</Description>
     <PackageTags>crdt;consensus;raft;leader-election;replication;aot</PackageTags>
-    <!-- CS8002: this strong-named assembly references RaftCs, which is not (yet) strong-named.
-         Fine on .NET Core/5+ (the SN-reference rule is relaxed); on .NET Framework the unsigned
-         transitive dep would fail strong-name load. See docs/strong-naming.md. -->
-    <NoWarn>$(NoWarn);CS8002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

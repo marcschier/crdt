@@ -73,10 +73,8 @@
   <PropertyGroup Condition="'$(_IsProductionLibrary)' != 'true'">
     <IsPackable>false</IsPackable>
     <!-- Non-shipping projects don't require XML doc comments on public members, and they
-         host generated code (TUnit, Rocks) whose doc comments must not fail the build.
-         CS8002: these projects transitively reference not-yet-strong-named upstream deps
-         (RaftCs/Pgm/NanoMsgSharp/DtlsSharp/Mqtt.Client) via the signed extension packages. -->
-    <NoWarn>$(NoWarn);CS1591;CS1570;CS1571;CS1572;CS1573;CS1574;CS1580;CS1581;CS1584;CS8002</NoWarn>
+         host generated code (TUnit, Rocks) whose doc comments must not fail the build. -->
+    <NoWarn>$(NoWarn);CS1591;CS1570;CS1571;CS1572;CS1573;CS1574;CS1580;CS1581;CS1584</NoWarn>
   </PropertyGroup>
 
   <!-- ───────────────────────────── NativeAOT compatibility (net8+) ───────────────── -->

@@ -94,7 +94,7 @@ The `Counters`, `Sets`, `Trees`, `Documents`, `Sequences`, and `Causal clocks` r
 - [Architecture](./docs/architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
 - [Performance & NativeAOT](./docs/performance.md) — AOT compliance, trimming, and benchmarking notes.
 - [Transports](./docs/transports.md) — the optional `Crdt.Transport` package: in-memory, TCP/UDP, DTLS-secured, MQTT broker, nanomsg/NNG BUS, and PGM multicast gossip replication.
-- [Strong naming](./docs/strong-naming.md) — assembly identity, the committed signing key, and the .NET Framework caveat for extension packages.
+- [Strong naming](./docs/strong-naming.md) — assembly identity and the committed signing key.
 
 ## 🛠️ Building from source
 

@@ -29,21 +29,21 @@ Because the key is in the repository, signing happens during a normal build with
 - `Directory.Build.props` sets `SignAssembly=true` and `AssemblyOriginatorKeyFile` for **all** projects (libraries, tests, samples, and benchmarks). Signing every project keeps `InternalsVisibleTo` working, since a signed assembly may only grant friend access to another signed assembly.
 - The same file defines the `CrdtPublicKey` property (the full public key). Each `InternalsVisibleTo` grant is declared as an MSBuild `<InternalsVisibleTo Include="…" Key="$(CrdtPublicKey)" />` item so the public key is written exactly once.
 
-## Caveat: extension packages that depend on not-yet-signed libraries
+## Dependencies are strong-named too
 
-The core packages — `Crdt`, `Crdt.Transport`, `Crdt.Consensus`, and `Crdt.Gc` — depend only on signed (Microsoft) assemblies, so they are strong-named with no caveats.
+The core packages — `Crdt`, `Crdt.Transport`, `Crdt.Consensus`, and `Crdt.Gc` — depend only on signed (Microsoft) assemblies.
 
-The following extension packages reference upstream `marcschier` libraries that are **not yet strong-named** (`RaftCs`, `Pgm`, `NanoMsgSharp`, `DtlsSharp`, `Mqtt.Client`):
+The extension packages additionally reference upstream `marcschier` libraries, and those are strong-named as well:
 
-- `Crdt.Consensus.Raft`
-- `Crdt.Transport.Pgm`
-- `Crdt.Transport.NanoMsg`
-- `Crdt.Transport.Dtls`
-- `Crdt.Transport.Mqtt`
+| Extension package | Upstream dependency |
+| --- | --- |
+| `Crdt.Consensus.Raft` | `RaftCs` |
+| `Crdt.Transport.Pgm` | `Pgm` |
+| `Crdt.Transport.NanoMsg` | `NanoMsgSharp` |
+| `Crdt.Transport.Dtls` | `DtlsSharp` |
+| `Crdt.Transport.Mqtt` | `Mqtt.Client` |
 
-These packages are still strong-named, and they work normally on **.NET (Core) 5 and later**, where the old "a strong-named assembly may only reference strong-named assemblies" rule was relaxed. The C# compiler still emits `CS8002` for the unsigned reference; that warning is suppressed in exactly these five projects (and in the test/sample/benchmark projects that consume them transitively).
-
-The one real limitation is **.NET Framework**: if one of these five packages is loaded on .NET Framework via its `netstandard` target, the unsigned upstream dependency will fail strong-name resolution at runtime. If you need these transports on .NET Framework, the fix is to strong-name the upstream library with the same key. Doing so upstream removes the caveat entirely and is the recommended long-term follow-up.
+Because every assembly in the dependency graph is strong-named, all packages are cleanly signed on every target framework — including the `netstandard` targets when they are loaded on the .NET Framework runtime — with no `CS8002` suppressions and no strong-name-resolution caveats.
 
 ## Consumer impact
 
