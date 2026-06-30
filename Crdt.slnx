@@ -30,6 +30,7 @@
   <Folder Name="/samples/">
     <Project Path="samples/Crdt.Samples/Crdt.Samples.csproj" />
     <Project Path="samples/Crdt.Samples.Gossip/Crdt.Samples.Gossip.csproj" />
+    <Project Path="samples/Crdt.Samples.Gc/Crdt.Samples.Gc.csproj" />
     <Project Path="samples/Crdt.Samples.Mqtt/Crdt.Samples.Mqtt.csproj" />
     <Project Path="samples/Crdt.Samples.NanoMsg/Crdt.Samples.NanoMsg.csproj" />
     <Project Path="samples/Crdt.Samples.Pgm/Crdt.Samples.Pgm.csproj" />

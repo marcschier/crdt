@@ -47,6 +47,13 @@ await engine.BroadcastStateAsync();
 
 The engine raises `Changed` after a received state, delta, or operation is applied.
 
+
+## Garbage-collection coordination
+
+`GarbageCollectionCoordinator` can share the same `ITransport` used by a `ReplicationEngine<TState>`. GC version reports and watermarks use dedicated frame types, consensus heartbeats and proposals use operation frames with a consensus envelope, and replication engines ignore the GC frame types. This lets an application run causal-stability garbage collection over the same in-memory, TCP, UDP, MQTT, NanoMsg, or PGM transport it already uses for CRDT state.
+
+See [Garbage collection](garbage-collection.md) for the stable-cut model and [`Crdt.Samples.Gc`](../samples/Crdt.Samples.Gc) for a complete in-process cluster using `InMemoryNetwork`, `HeartbeatFailureDetector`, `DeterministicLeaderConsensus`, and `GarbageCollectionCoordinator`.
+
 ## In-memory transport
 
 `InMemoryTransport` is deterministic and intended for tests, simulations, and single-process samples. An `InMemoryNetwork` registry holds all started peers; sending from one peer queues the frame to every other peer through channels, and each peer pumps queued frames into `FrameReceived`. Tests can call `DrainAsync` to wait until the network is idle without relying on fixed sleeps.
