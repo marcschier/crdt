@@ -25,6 +25,13 @@
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 
+  <!-- Raft consensus -->
+  <!-- Placeholder versions pending RaftCs publication to nuget.org. -->
+  <ItemGroup>
+    <PackageVersion Include="RaftCs" Version="0.9.0" />
+    <PackageVersion Include="RaftCs.Transport" Version="0.9.0" />
+  </ItemGroup>
+
   <!-- Test stack -->
   <ItemGroup>
     <PackageVersion Include="TUnit" Version="1.56.35" />
