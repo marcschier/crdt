@@ -28,8 +28,8 @@
   <!-- Raft consensus -->
   <!-- Raft consensus (marcschier/raft-cs). -->
   <ItemGroup>
-    <PackageVersion Include="RaftCs" Version="1.0.0" />
-    <PackageVersion Include="RaftCs.Transport" Version="1.0.0" />
+    <PackageVersion Include="RaftCs" Version="1.1.0" />
+    <PackageVersion Include="RaftCs.Transport" Version="1.1.0" />
   </ItemGroup>
 
   <!-- Test stack -->
@@ -46,21 +46,21 @@
 
   <!-- Secure transport (DTLS) -->
   <ItemGroup>
-    <PackageVersion Include="DtlsSharp" Version="1.0.1" />
+    <PackageVersion Include="DtlsSharp" Version="1.1.0" />
   </ItemGroup>
 
   <!-- MQTT transport -->
   <ItemGroup>
-    <PackageVersion Include="Mqtt.Client" Version="1.0.2" />
+    <PackageVersion Include="Mqtt.Client" Version="1.1.0" />
   </ItemGroup>
 
   <!-- Scalability-protocols (nanomsg/NNG) transport -->
   <ItemGroup>
-    <PackageVersion Include="NanoMsgSharp" Version="1.0.0" />
+    <PackageVersion Include="NanoMsgSharp" Version="1.1.0" />
   </ItemGroup>
   <!-- PGM (RFC3208 multicast) transport -->
   <ItemGroup>
-    <PackageVersion Include="Pgm" Version="0.9.16" />
+    <PackageVersion Include="Pgm" Version="0.10.0" />
   </ItemGroup>
 
 </Project>

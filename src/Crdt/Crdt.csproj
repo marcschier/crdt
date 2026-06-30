@@ -10,4 +10,9 @@
     <PackageTags>crdt;distributed-systems;replication;eventual-consistency;merge;delta-crdt;operation-based;aot;span;high-performance</PackageTags>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Crdt.Tests" Key="$(CrdtPublicKey)" />
+    <InternalsVisibleTo Include="Crdt.Benchmarks" Key="$(CrdtPublicKey)" />
+  </ItemGroup>
+
 </Project>

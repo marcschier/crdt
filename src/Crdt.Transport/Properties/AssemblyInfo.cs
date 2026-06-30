@@ -1,7 +1,5 @@
 // Copyright (c) marcschier. Licensed under the MIT License.
 
-using System.Runtime.CompilerServices;
-
-// The DTLS transport reuses this assembly's netstandard polyfills (socket-async shims,
-// SharedRandom, Throw, PeriodicTimer) instead of duplicating them.
-[assembly: InternalsVisibleTo("Crdt.Transport.Dtls")]
+// This assembly exposes unsigned integral types (uint/ulong) on its public surface, so it
+// is intentionally not CLS-compliant. CLSCompliant resolves via the implicit global System using.
+[assembly: CLSCompliant(false)]

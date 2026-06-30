@@ -13,6 +13,10 @@
     <PackageReference Include="Mqtt.Client" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Crdt.Transport.Mqtt.Tests" Key="$(CrdtPublicKey)" />
+  </ItemGroup>
+
   <!-- netstandard async/channel dependencies (Span/PolySharp/Unsafe come from Directory.Build.props). -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.Threading.Channels" />

@@ -12,6 +12,12 @@
     <ProjectReference Include="..\Crdt\Crdt.csproj" />
   </ItemGroup>
 
+  <!-- The DTLS transport reuses this assembly's netstandard polyfills (socket-async shims,
+       SharedRandom, Throw, PeriodicTimer) instead of duplicating them. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Crdt.Transport.Dtls" Key="$(CrdtPublicKey)" />
+  </ItemGroup>
+
   <!-- netstandard async/channel dependencies (Span/PolySharp/Unsafe come from Directory.Build.props). -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.Threading.Channels" />
