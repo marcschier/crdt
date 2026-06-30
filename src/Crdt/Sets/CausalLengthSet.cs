@@ -11,11 +11,17 @@ namespace Crdt;
 /// element, so later add/remove cycles dominate earlier observations without tombstone sets.
 /// </summary>
 /// <typeparam name="T">The element type; must be non-null and have value equality.</typeparam>
-/// <remarks>Mutable and not thread-safe.</remarks>
+/// <remarks>
+/// Mutable and not thread-safe. Lengths are per-element counters rather than replica-stamped
+/// dots, so a <see cref="StableCut"/> alone cannot identify which removed elements are
+/// all-observed. Coordinators that prove removed element keys are observed everywhere may use
+/// the internal all-observed collection hook to remove those absent entries.
+/// </remarks>
 public sealed partial class CausalLengthSet<T> :
     IConvergent<CausalLengthSet<T>>,
     IDeltaConvergent<CausalLengthSet<T>, CausalLengthSet<T>>,
     IOperationConvergent<CausalLengthSetOperation<T>>,
+    IGarbageCollectable,
     IEquatable<CausalLengthSet<T>>
     where T : notnull
 {
@@ -69,6 +75,9 @@ public sealed partial class CausalLengthSet<T> :
             return elements;
         }
     }
+
+    /// <inheritdoc/>
+    public VersionVector ObservedVersion => new();
 
     /// <summary>Determines whether <paramref name="element"/> is currently present.</summary>
     /// <param name="element">The element to test.</param>
@@ -170,6 +179,24 @@ public sealed partial class CausalLengthSet<T> :
         }
 
         return false;
+    }
+
+    /// <inheritdoc/>
+    public void CollectStable(StableCut cut)
+    {
+        Throw.IfNull(cut);
+    }
+
+    internal void CollectAllObserved(IEnumerable<T> stableRemovedElements)
+    {
+        Throw.IfNull(stableRemovedElements);
+        foreach (T element in stableRemovedElements)
+        {
+            if (_lengths.TryGetValue(element, out ulong length) && !IsPresent(length))
+            {
+                _lengths.Remove(element);
+            }
+        }
     }
 
     /// <summary>Serializes the set to the binary format using <paramref name="serializer"/>.</summary>
