@@ -155,7 +155,7 @@ public static class FrameCodec
 
     private static void ValidateMessageType(MessageType messageType)
     {
-        if (messageType is < MessageType.State or > MessageType.Ack)
+        if (messageType is < MessageType.State or > MessageType.GcWatermark)
         {
             throw new InvalidDataException("Unknown transport message type.");
         }

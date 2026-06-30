@@ -23,6 +23,9 @@ public sealed class StableCut : IEquatable<StableCut>, IBinaryWritable
     /// <summary>Gets a value indicating whether this cut covers no dots.</summary>
     public bool IsEmpty => _floors.Count == 0;
 
+    /// <summary>Gets the replicas with non-zero floors in this cut.</summary>
+    public IReadOnlyCollection<ReplicaId> Replicas => _floors.Keys;
+
     /// <summary>Computes the stable cut for <paramref name="vectors"/> by taking their pointwise minimum.</summary>
     /// <param name="vectors">The observed frontiers of the live replicas participating in the cut.</param>
     /// <returns>The resulting stable cut.</returns>

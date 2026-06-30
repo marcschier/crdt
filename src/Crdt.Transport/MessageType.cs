@@ -22,4 +22,10 @@ public enum MessageType : byte
 
     /// <summary>An acknowledgement used by transports.</summary>
     Ack = 6,
+
+    /// <summary>A garbage-collection causal-frontier report.</summary>
+    GcVersionReport = 7,
+
+    /// <summary>A garbage-collection stable watermark.</summary>
+    GcWatermark = 8,
 }
