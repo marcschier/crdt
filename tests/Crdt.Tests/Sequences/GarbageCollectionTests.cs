@@ -107,4 +107,46 @@ public sealed class GarbageCollectionTests
         await Assert.That(sequence.ToJson(CrdtValues.String).Contains("\"b\"")).IsFalse();
         await Assert.That(string.Join("", sequence.ToArray())).IsEqualTo("a");
     }
+
+    [Test]
+    public async Task LSeq_CollectStable_Reclaims_Stable_Deleted_Position()
+    {
+        var sequence = new LSeqSequence<string>();
+        sequence.Append(A, "a");
+        sequence.Append(A, "b");
+        sequence.Delete(1);
+
+        sequence.CollectStable(StableCut.Meet([sequence.ObservedVersion]));
+
+        await Assert.That(sequence.ToJson(CrdtValues.String).Contains("\"b\"")).IsFalse();
+        await Assert.That(string.Join("", sequence.ToArray())).IsEqualTo("a");
+    }
+
+    [Test]
+    public async Task Treedoc_CollectStable_Reclaims_Stable_Deleted_Position()
+    {
+        var sequence = new TreedocSequence<string>();
+        sequence.Append(A, "a");
+        sequence.Append(A, "b");
+        sequence.Delete(1);
+
+        sequence.CollectStable(StableCut.Meet([sequence.ObservedVersion]));
+
+        await Assert.That(sequence.ToJson(CrdtValues.String).Contains("\"b\"")).IsFalse();
+        await Assert.That(string.Join("", sequence.ToArray())).IsEqualTo("a");
+    }
+
+    [Test]
+    public async Task LSeq_CollectStable_Does_Not_Reclaim_Above_Cut()
+    {
+        var sequence = new LSeqSequence<string>();
+        sequence.Append(A, "a");
+        sequence.Append(A, "b");
+        sequence.Delete(1);
+        string before = sequence.ToJson(CrdtValues.String);
+
+        sequence.CollectStable(StableCut.Meet([]));
+
+        await Assert.That(sequence.ToJson(CrdtValues.String)).IsEqualTo(before);
+    }
 }
