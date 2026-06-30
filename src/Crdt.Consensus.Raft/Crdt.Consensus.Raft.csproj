@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>Crdt.Consensus.Raft</AssemblyName>
+    <RootNamespace>Crdt.Consensus.Raft</RootNamespace>
+    <Description>Raft-backed Crdt.Consensus implementation using the RaftCs library.</Description>
+    <PackageTags>crdt;consensus;raft;leader-election;replication;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crdt.Consensus\Crdt.Consensus.csproj" />
+    <ProjectReference Include="..\Crdt.Transport\Crdt.Transport.csproj" />
+    <PackageReference Include="RaftCs" />
+    <PackageReference Include="RaftCs.Transport" />
+  </ItemGroup>
+
+  <!-- netstandard async dependencies (Span/PolySharp/Unsafe come from Directory.Build.props). -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" />
+  </ItemGroup>
+
+</Project>
