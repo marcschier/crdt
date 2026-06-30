@@ -12,6 +12,7 @@ High-performance, **NativeAOT-ready** [Conflict-free Replicated Data Types](http
 - **Fast**: `readonly struct` building blocks, `Span<T>`/`IBufferWriter<byte>` serialization, `BinaryPrimitives`/`Unsafe` fast paths, no LINQ on hot paths.
 - **NativeAOT & trimming clean** on .NET 8/9/10 — the library is annotated `IsAotCompatible`, and the test suite itself is verified running as a NativeAOT binary.
 - **Broad reach**: targets `netstandard2.0`, `netstandard2.1`, `net8.0`, `net9.0`, `net10.0` (polyfilled on older runtimes).
+- **Strong-named**: all assemblies are signed (public key token `da3d093ebe8bf537`) for strong-named and .NET Framework consumers — see [strong naming](./docs/strong-naming.md).
 
 ## Supported target frameworks
 
@@ -93,6 +94,7 @@ The `Counters`, `Sets`, `Trees`, `Documents`, `Sequences`, and `Causal clocks` r
 - [Architecture](./docs/architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
 - [Performance & NativeAOT](./docs/performance.md) — AOT compliance, trimming, and benchmarking notes.
 - [Transports](./docs/transports.md) — the optional `Crdt.Transport` package: in-memory, TCP/UDP, DTLS-secured, MQTT broker, nanomsg/NNG BUS, and PGM multicast gossip replication.
+- [Strong naming](./docs/strong-naming.md) — assembly identity, the committed signing key, and the .NET Framework caveat for extension packages.
 
 ## 🛠️ Building from source
 

@@ -13,6 +13,7 @@
 - [Architecture](architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
 - [Performance & NativeAOT](performance.md) — AOT compliance, trimming, and benchmarking notes.
 - [Transports](transports.md) — the optional transport packages: in-memory, TCP/UDP, DTLS-secured, MQTT broker, and nanomsg/NNG BUS gossip replication.
+- [Strong naming](strong-naming.md) — assembly identity, the committed signing key, and the .NET Framework caveat for extension packages.
 
 ## The one-paragraph mental model
 

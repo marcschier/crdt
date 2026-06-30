@@ -6,6 +6,10 @@
     <RootNamespace>Crdt.Transport.Pgm</RootNamespace>
     <Description>PGM (Pragmatic General Multicast, RFC 3208) gossip transport for Crdt.Transport, built on the pure-managed Pgm package.</Description>
     <PackageTags>crdt;gossip;anti-entropy;replication;pgm;multicast;reliable-multicast;rfc3208</PackageTags>
+    <!-- CS8002: this strong-named assembly references Pgm, which is not (yet) strong-named.
+         Fine on .NET Core/5+ (the SN-reference rule is relaxed); on .NET Framework the unsigned
+         transitive dep would fail strong-name load. See docs/strong-naming.md. -->
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

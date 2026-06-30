@@ -26,6 +26,19 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
+  <!-- ───────────────────────────── Strong-name signing (all projects) ────────────────
+       Every assembly is signed with one repo key so the packages can be consumed by
+       strong-named / .NET Framework / GAC consumers. The .snk holds a full key pair and
+       is committed on purpose: strong naming is an *identity* feature, not a secret, so
+       the key is not sensitive. The .NET SDK signs with managed code on every OS, so CI
+       needs no secrets or extra steps. $(CrdtPublicKey) is the matching full public key,
+       shared by all assemblies so InternalsVisibleTo friend grants resolve. ──────────── -->
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)crdt.snk</AssemblyOriginatorKeyFile>
+    <CrdtPublicKey>0024000004800000940000000602000000240000525341310004000001000100f900377db52e65f0bc00584ec2d36f714bc6e6f3d62bb8cdbf109f0238822160ac4404be357bd31ee23c933c5224ab831788322f0a0217ef29a939c80541a40c354b72e99f4134700a8ad7201fe503ffac5d6aa03a93e1bd2b8b495c6feb8893bcc9516f087a150e61b0b65afe65033cc69082618464ec9c5c8598590b1645d9</CrdtPublicKey>
+  </PropertyGroup>
+
   <!-- ───────────────────────────── Project-kind flags ───────────────────────────── -->
   <PropertyGroup>
     <_IsProductionLibrary Condition="'$(IsTestProject)' != 'true' AND '$(IsSampleProject)' != 'true' AND '$(IsBenchmarkProject)' != 'true'">true</_IsProductionLibrary>
@@ -60,8 +73,10 @@
   <PropertyGroup Condition="'$(_IsProductionLibrary)' != 'true'">
     <IsPackable>false</IsPackable>
     <!-- Non-shipping projects don't require XML doc comments on public members, and they
-         host generated code (TUnit, Rocks) whose doc comments must not fail the build. -->
-    <NoWarn>$(NoWarn);CS1591;CS1570;CS1571;CS1572;CS1573;CS1574;CS1580;CS1581;CS1584</NoWarn>
+         host generated code (TUnit, Rocks) whose doc comments must not fail the build.
+         CS8002: these projects transitively reference not-yet-strong-named upstream deps
+         (RaftCs/Pgm/NanoMsgSharp/DtlsSharp/Mqtt.Client) via the signed extension packages. -->
+    <NoWarn>$(NoWarn);CS1591;CS1570;CS1571;CS1572;CS1573;CS1574;CS1580;CS1581;CS1584;CS8002</NoWarn>
   </PropertyGroup>
 
   <!-- ───────────────────────────── NativeAOT compatibility (net8+) ───────────────── -->
