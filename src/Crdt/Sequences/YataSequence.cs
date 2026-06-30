@@ -25,6 +25,7 @@ public sealed class YataSequence<T> :
     IConvergent<YataSequence<T>>,
     IDeltaConvergent<YataSequence<T>, YataSequence<T>>,
     IOperationConvergent<YataOperation<T>>,
+    IGarbageCollectable,
     IEquatable<YataSequence<T>>
 {
     private static Dot Start => default;
@@ -70,6 +71,9 @@ public sealed class YataSequence<T> :
 
         return values;
     }
+
+    /// <inheritdoc/>
+    public VersionVector ObservedVersion => _version.Clone();
 
     /// <summary>Inserts <paramref name="value"/> at <paramref name="index"/> on behalf of a replica.</summary>
     /// <param name="replica">The local replica.</param>
@@ -191,6 +195,41 @@ public sealed class YataSequence<T> :
 
         _version.Observe(operation.Id);
         return MarkDeleted(operation.Id);
+    }
+
+    /// <inheritdoc/>
+    public void CollectStable(StableCut cut)
+    {
+        Throw.IfNull(cut);
+
+        var removable = new HashSet<Dot>();
+        foreach (Dot dot in _deleted)
+        {
+            if (_elements.ContainsKey(dot) && cut.IsStable(dot))
+            {
+                removable.Add(dot);
+            }
+        }
+
+        if (removable.Count == 0)
+        {
+            return;
+        }
+
+        foreach (KeyValuePair<Dot, Element> entry in _elements)
+        {
+            if (!removable.Contains(entry.Key))
+            {
+                removable.Remove(entry.Value.OriginLeft);
+                removable.Remove(entry.Value.OriginRight);
+            }
+        }
+
+        foreach (Dot dot in removable)
+        {
+            _elements.Remove(dot);
+            _deleted.Remove(dot);
+        }
     }
 
     /// <summary>Serializes the sequence to the binary format using <paramref name="serializer"/>.</summary>

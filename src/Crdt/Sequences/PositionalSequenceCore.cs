@@ -28,6 +28,7 @@ internal interface ISequencePositionStrategy<TPosition>
 }
 
 internal sealed class PositionalSequenceCore<T, TPosition, TStrategy> :
+    IGarbageCollectable,
     IEquatable<PositionalSequenceCore<T, TPosition, TStrategy>>
     where TPosition : notnull, ISequencePosition<TPosition>
     where TStrategy : struct, ISequencePositionStrategy<TPosition>
@@ -55,6 +56,8 @@ internal sealed class PositionalSequenceCore<T, TPosition, TStrategy> :
     }
 
     public int Count => VisiblePositions().Count;
+
+    public VersionVector ObservedVersion => _version.Clone();
 
     public T this[int index] => _entries[VisiblePositionAt(index)];
 
@@ -151,6 +154,26 @@ internal sealed class PositionalSequenceCore<T, TPosition, TStrategy> :
     {
         _version.Observe(position.Dot);
         return _deleted.Add(position);
+    }
+
+    public void CollectStable(StableCut cut)
+    {
+        Throw.IfNull(cut);
+
+        var removable = new List<TPosition>();
+        foreach (TPosition position in _deleted)
+        {
+            if (_entries.ContainsKey(position) && cut.IsStable(position.Dot))
+            {
+                removable.Add(position);
+            }
+        }
+
+        foreach (TPosition position in removable)
+        {
+            _entries.Remove(position);
+            _deleted.Remove(position);
+        }
     }
 
     public void WriteTo(IBufferWriter<byte> output, ICrdtValueSerializer<T> serializer)

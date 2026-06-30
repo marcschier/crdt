@@ -19,6 +19,7 @@ namespace Crdt;
 public sealed partial class FugueSequence<T> :
     IConvergent<FugueSequence<T>>,
     IOperationConvergent<FugueOperation<T>>,
+    IGarbageCollectable,
     IEquatable<FugueSequence<T>>
 {
     private static Dot Root => default;
@@ -66,6 +67,9 @@ public sealed partial class FugueSequence<T> :
 
     /// <summary>Gets the visible elements in sequence order.</summary>
     public IReadOnlyList<T> Value => ToArray();
+
+    /// <inheritdoc/>
+    public VersionVector ObservedVersion => _version.Clone();
 
     /// <summary>Gets the visible elements as a string when <typeparamref name="T"/> is <see cref="char"/>.</summary>
     public string Text
@@ -196,6 +200,40 @@ public sealed partial class FugueSequence<T> :
         }
 
         return MarkDeleted(operation.Id);
+    }
+
+    /// <inheritdoc/>
+    public void CollectStable(StableCut cut)
+    {
+        Throw.IfNull(cut);
+
+        var removable = new HashSet<Dot>();
+        foreach (Dot dot in _deleted)
+        {
+            if (_nodes.ContainsKey(dot) && cut.IsStable(dot))
+            {
+                removable.Add(dot);
+            }
+        }
+
+        if (removable.Count == 0)
+        {
+            return;
+        }
+
+        foreach (KeyValuePair<Dot, Node> entry in _nodes)
+        {
+            if (!removable.Contains(entry.Key))
+            {
+                removable.Remove(entry.Value.ParentId);
+            }
+        }
+
+        foreach (Dot dot in removable)
+        {
+            _nodes.Remove(dot);
+            _deleted.Remove(dot);
+        }
     }
 
     /// <summary>Serializes the sequence to the binary format using <paramref name="serializer"/>.</summary>

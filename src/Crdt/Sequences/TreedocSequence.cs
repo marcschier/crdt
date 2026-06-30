@@ -92,6 +92,7 @@ public sealed class TreedocSequence<T> :
     IConvergent<TreedocSequence<T>>,
     IDeltaConvergent<TreedocSequence<T>, TreedocSequence<T>>,
     IOperationConvergent<TreedocOperation<T>>,
+    IGarbageCollectable,
     IEquatable<TreedocSequence<T>>
 {
     private readonly PositionalSequenceCore<T, TreedocPosition, TreedocStrategy> _core;
@@ -103,6 +104,9 @@ public sealed class TreedocSequence<T> :
 
     /// <summary>Gets the number of visible elements.</summary>
     public int Count => _core.Count;
+
+    /// <inheritdoc/>
+    public VersionVector ObservedVersion => _core.ObservedVersion;
 
     /// <summary>Gets the visible element at <paramref name="index"/>.</summary>
     /// <param name="index">The zero-based visible index.</param>
@@ -172,6 +176,9 @@ public sealed class TreedocSequence<T> :
     public bool Apply(TreedocOperation<T> operation) => operation.Kind == TreedocOperationKind.Insert
         ? _core.ApplyInsert(operation.Position, operation.Value!)
         : _core.ApplyDelete(operation.Position);
+
+    /// <inheritdoc/>
+    public void CollectStable(StableCut cut) => _core.CollectStable(cut);
 
     /// <summary>Serializes the sequence to the binary format using <paramref name="serializer"/>.</summary>
     /// <param name="output">The destination buffer writer.</param>
