@@ -9,6 +9,9 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Crdt/Crdt.csproj" />
+    <Project Path="src/Crdt.Consensus/Crdt.Consensus.csproj" />
+    <Project Path="src/Crdt.Consensus.Raft/Crdt.Consensus.Raft.csproj" />
+    <Project Path="src/Crdt.Gc/Crdt.Gc.csproj" />
     <Project Path="src/Crdt.Transport/Crdt.Transport.csproj" />
     <Project Path="src/Crdt.Transport.Dtls/Crdt.Transport.Dtls.csproj" />
     <Project Path="src/Crdt.Transport.Mqtt/Crdt.Transport.Mqtt.csproj" />
@@ -16,6 +19,9 @@
     <Project Path="src/Crdt.Transport.Pgm/Crdt.Transport.Pgm.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Crdt.Consensus.Tests/Crdt.Consensus.Tests.csproj" />
+    <Project Path="tests/Crdt.Consensus.Raft.Tests/Crdt.Consensus.Raft.Tests.csproj" />
+    <Project Path="tests/Crdt.Gc.Tests/Crdt.Gc.Tests.csproj" />
     <Project Path="tests/Crdt.Tests/Crdt.Tests.csproj" />
     <Project Path="tests/Crdt.Transport.Tests/Crdt.Transport.Tests.csproj" />
     <Project Path="tests/Crdt.Transport.Dtls.Tests/Crdt.Transport.Dtls.Tests.csproj" />
@@ -26,6 +32,7 @@
   <Folder Name="/samples/">
     <Project Path="samples/Crdt.Samples/Crdt.Samples.csproj" />
     <Project Path="samples/Crdt.Samples.Gossip/Crdt.Samples.Gossip.csproj" />
+    <Project Path="samples/Crdt.Samples.Gc/Crdt.Samples.Gc.csproj" />
     <Project Path="samples/Crdt.Samples.Mqtt/Crdt.Samples.Mqtt.csproj" />
     <Project Path="samples/Crdt.Samples.NanoMsg/Crdt.Samples.NanoMsg.csproj" />
     <Project Path="samples/Crdt.Samples.Pgm/Crdt.Samples.Pgm.csproj" />

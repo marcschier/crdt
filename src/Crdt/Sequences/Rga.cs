@@ -27,6 +27,7 @@ public sealed class Rga<T> :
     IConvergent<Rga<T>>,
     IDeltaConvergent<Rga<T>, Rga<T>>,
     IOperationConvergent<RgaOperation<T>>,
+    IGarbageCollectable,
     IEquatable<Rga<T>>
 {
     private static Dot Root => default;
@@ -72,6 +73,9 @@ public sealed class Rga<T> :
 
         return values;
     }
+
+    /// <inheritdoc/>
+    public VersionVector ObservedVersion => _version.Clone();
 
     /// <summary>Inserts <paramref name="value"/> at <paramref name="index"/> on behalf of a replica.</summary>
     /// <param name="replica">The local replica.</param>
@@ -178,6 +182,40 @@ public sealed class Rga<T> :
 
         _version.Observe(operation.Id);
         return _deleted.Add(operation.Id);
+    }
+
+    /// <inheritdoc/>
+    public void CollectStable(StableCut cut)
+    {
+        Throw.IfNull(cut);
+
+        var removable = new HashSet<Dot>();
+        foreach (Dot dot in _deleted)
+        {
+            if (_nodes.ContainsKey(dot) && cut.IsStable(dot))
+            {
+                removable.Add(dot);
+            }
+        }
+
+        if (removable.Count == 0)
+        {
+            return;
+        }
+
+        foreach (KeyValuePair<Dot, Node> entry in _nodes)
+        {
+            if (!removable.Contains(entry.Key))
+            {
+                removable.Remove(entry.Value.Parent);
+            }
+        }
+
+        foreach (Dot dot in removable)
+        {
+            _nodes.Remove(dot);
+            _deleted.Remove(dot);
+        }
     }
 
     /// <summary>Serializes the sequence to the binary format using <paramref name="serializer"/>.</summary>

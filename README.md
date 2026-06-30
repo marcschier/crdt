@@ -88,6 +88,7 @@ The `Counters`, `Sets`, `Trees`, `Documents`, `Sequences`, and `Causal clocks` r
 - [Data types](./docs/data-types.md) — the full catalogue with usage examples for every CRDT.
 - [Choosing a data type](./docs/choosing-data-types.md) — when to use which type, when not to, and rough performance/resource cost.
 - [Replication models](./docs/replication-models.md) — state-based, delta-state, and operation-based, and when to use each.
+- [Garbage collection](./docs/garbage-collection.md) — causal stability, stable cuts, tombstone reclamation, and pluggable consensus.
 - [Serialization](./docs/serialization.md) — the binary and JSON formats, value serializers, and hostile-input limits.
 - [Architecture](./docs/architecture.md) — semilattices, dots, the causal kernel (ORSWOT), and the Hybrid Logical Clock.
 - [Performance & NativeAOT](./docs/performance.md) — AOT compliance, trimming, and benchmarking notes.

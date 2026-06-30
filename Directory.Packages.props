@@ -25,6 +25,13 @@
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 
+  <!-- Raft consensus -->
+  <!-- Raft consensus (marcschier/raft-cs). -->
+  <ItemGroup>
+    <PackageVersion Include="RaftCs" Version="1.0.0" />
+    <PackageVersion Include="RaftCs.Transport" Version="1.0.0" />
+  </ItemGroup>
+
   <!-- Test stack -->
   <ItemGroup>
     <PackageVersion Include="TUnit" Version="1.56.35" />

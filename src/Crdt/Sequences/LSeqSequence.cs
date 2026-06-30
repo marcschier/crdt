@@ -92,6 +92,7 @@ public sealed class LSeqSequence<T> :
     IConvergent<LSeqSequence<T>>,
     IDeltaConvergent<LSeqSequence<T>, LSeqSequence<T>>,
     IOperationConvergent<LSeqOperation<T>>,
+    IGarbageCollectable,
     IEquatable<LSeqSequence<T>>
 {
     private readonly PositionalSequenceCore<T, LSeqPosition, LSeqStrategy> _core;
@@ -103,6 +104,9 @@ public sealed class LSeqSequence<T> :
 
     /// <summary>Gets the number of visible elements.</summary>
     public int Count => _core.Count;
+
+    /// <inheritdoc/>
+    public VersionVector ObservedVersion => _core.ObservedVersion;
 
     /// <summary>Gets the visible element at <paramref name="index"/>.</summary>
     /// <param name="index">The zero-based visible index.</param>
@@ -172,6 +176,9 @@ public sealed class LSeqSequence<T> :
     public bool Apply(LSeqOperation<T> operation) => operation.Kind == LSeqOperationKind.Insert
         ? _core.ApplyInsert(operation.Position, operation.Value!)
         : _core.ApplyDelete(operation.Position);
+
+    /// <inheritdoc/>
+    public void CollectStable(StableCut cut) => _core.CollectStable(cut);
 
     /// <summary>Serializes the sequence to the binary format using <paramref name="serializer"/>.</summary>
     /// <param name="output">The destination buffer writer.</param>

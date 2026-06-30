@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>Crdt.Gc</AssemblyName>
+    <RootNamespace>Crdt.Gc</RootNamespace>
+    <Description>Consensus-driven causal-stability garbage-collection coordinator for CRDT replicas.</Description>
+    <PackageTags>crdt;garbage-collection;causal-stability;consensus;replication;aot</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crdt.Transport\Crdt.Transport.csproj" />
+    <ProjectReference Include="..\Crdt.Consensus\Crdt.Consensus.csproj" />
+  </ItemGroup>
+
+  <!-- netstandard async dependencies (Span/PolySharp/Unsafe come from Directory.Build.props). -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" />
+  </ItemGroup>
+
+</Project>

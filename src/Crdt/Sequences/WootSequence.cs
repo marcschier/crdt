@@ -25,6 +25,7 @@ public sealed class WootSequence<T> :
     IConvergent<WootSequence<T>>,
     IDeltaConvergent<WootSequence<T>, WootSequence<T>>,
     IOperationConvergent<WootOperation<T>>,
+    IGarbageCollectable,
     IEquatable<WootSequence<T>>
 {
     private static Dot Begin => default;
@@ -72,6 +73,9 @@ public sealed class WootSequence<T> :
 
         return values;
     }
+
+    /// <inheritdoc/>
+    public VersionVector ObservedVersion => _version.Clone();
 
     /// <summary>Inserts <paramref name="value"/> at <paramref name="index"/> on behalf of a replica.</summary>
     /// <param name="replica">The local replica.</param>
@@ -193,6 +197,41 @@ public sealed class WootSequence<T> :
 
         _version.Observe(operation.Id);
         return MarkDeleted(operation.Id);
+    }
+
+    /// <inheritdoc/>
+    public void CollectStable(StableCut cut)
+    {
+        Throw.IfNull(cut);
+
+        var removable = new HashSet<Dot>();
+        foreach (Dot dot in _deleted)
+        {
+            if (_characters.ContainsKey(dot) && cut.IsStable(dot))
+            {
+                removable.Add(dot);
+            }
+        }
+
+        if (removable.Count == 0)
+        {
+            return;
+        }
+
+        foreach (KeyValuePair<Dot, Character> entry in _characters)
+        {
+            if (!removable.Contains(entry.Key))
+            {
+                removable.Remove(entry.Value.PrevId);
+                removable.Remove(entry.Value.NextId);
+            }
+        }
+
+        foreach (Dot dot in removable)
+        {
+            _characters.Remove(dot);
+            _deleted.Remove(dot);
+        }
     }
 
     /// <summary>Serializes the sequence to the binary format using <paramref name="serializer"/>.</summary>

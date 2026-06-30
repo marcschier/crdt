@@ -70,11 +70,18 @@ public readonly struct TwoPhaseSetOperation<T>
 /// grow-only tombstone set. Once an element is removed, it cannot become present again.
 /// </summary>
 /// <typeparam name="T">The element type; must be non-null and have value equality.</typeparam>
-/// <remarks>Mutable and not thread-safe.</remarks>
+/// <remarks>
+/// Mutable and not thread-safe. This type has no causal dots, so
+/// <see cref="IGarbageCollectable.CollectStable"/> cannot prove value-level reclamation from a
+/// <see cref="StableCut"/>. Coordinators that have separately proven a removed value is observed
+/// everywhere may call the internal all-observed collection hook to drop it from both grow-only
+/// sets without changing the visible value.
+/// </remarks>
 public sealed class TwoPhaseSet<T> :
     IConvergent<TwoPhaseSet<T>>,
     IDeltaConvergent<TwoPhaseSet<T>, TwoPhaseSet<T>>,
     IOperationConvergent<TwoPhaseSetOperation<T>>,
+    IGarbageCollectable,
     IEquatable<TwoPhaseSet<T>>
     where T : notnull
 {
@@ -137,6 +144,9 @@ public sealed class TwoPhaseSet<T> :
             return elements;
         }
     }
+
+    /// <inheritdoc/>
+    public VersionVector ObservedVersion => new();
 
     /// <summary>Determines whether <paramref name="element"/> is currently present.</summary>
     /// <param name="element">The element to test.</param>
@@ -235,6 +245,24 @@ public sealed class TwoPhaseSet<T> :
         }
 
         return _adds.Add(operation.Element);
+    }
+
+    /// <inheritdoc/>
+    public void CollectStable(StableCut cut)
+    {
+        Throw.IfNull(cut);
+    }
+
+    internal void CollectAllObserved(IEnumerable<T> stableRemovedElements)
+    {
+        Throw.IfNull(stableRemovedElements);
+        foreach (T element in stableRemovedElements)
+        {
+            if (_removes.Remove(element))
+            {
+                _adds.Remove(element);
+            }
+        }
     }
 
     /// <summary>Serializes the set to the binary format using <paramref name="serializer"/>.</summary>
