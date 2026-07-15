@@ -203,14 +203,6 @@ jobs:
             10.0.x
 
       - name: Pack
-        env:
-          # Nerdbank.GitVersioning writes GitBuildVersion*/GitAssemblyInformationalVersion to
-          # $GITHUB_ENV whenever GITHUB_ACTIONS=true. Packing 9 projects (each multi-TFM) runs many
-          # MSBuild nodes in parallel, whose concurrent appends to $GITHUB_ENV race and occasionally
-          # corrupt a line -> "Unable to process file command 'env' ... Invalid format", failing the
-          # job before the push. These variables are unused here, so blank GITHUB_ACTIONS for this
-          # step to skip the writes; the package version is still computed from git.
-          GITHUB_ACTIONS: ''
         run: |
           dotnet pack src/Crdt/Crdt.csproj -c Release -o artifacts
           dotnet pack src/Crdt.Transport/Crdt.Transport.csproj -c Release -o artifacts
