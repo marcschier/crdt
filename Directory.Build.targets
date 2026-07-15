@@ -1,0 +1,21 @@
+<Project>
+
+  <!--
+    Nerdbank.GitVersioning appends GitBuildVersion/GitBuildVersionSimple/GitAssemblyInformationalVersion
+    to $GITHUB_ENV whenever it runs under GitHub Actions (GITHUB_ACTIONS=true). When several projects or
+    target frameworks build in parallel, those concurrent appends to the single $GITHUB_ENV file race and
+    occasionally corrupt a line, which the runner then rejects with
+    "Unable to process file command 'env' successfully. Invalid format '...'", failing the job.
+
+    GITHUB_ACTIONS is a default environment variable that cannot be overridden from the workflow, so we
+    stop the write at the MSBuild layer instead: nbgv's SetCloudBuildVersionVars target only runs when
+    @(CloudBuildVersionVars) is non-empty, so we clear that item just before it. These CI variables are
+    not consumed by this repository's build; the package/assembly versions are still computed from git.
+  -->
+  <Target Name="_DisableNbgvCloudBuildVarWrites" BeforeTargets="SetCloudBuildVersionVars">
+    <ItemGroup>
+      <CloudBuildVersionVars Remove="@(CloudBuildVersionVars)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
