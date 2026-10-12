@@ -15,7 +15,8 @@ namespace Crdt;
 /// The same instance supports all three replication models: exchange full state with
 /// <see cref="Merge"/>, propagate just recent changes with <see cref="TryExtractDelta"/> /
 /// <see cref="MergeDelta"/>, or broadcast the operation returned by <see cref="Increment"/>
-/// and replay it with <see cref="Apply"/>. Mutable and not thread-safe.
+/// and replay it with <see cref="Apply"/>. Individual operations are thread-safe;
+/// compound sequences of calls still require external synchronization.
 /// </para>
 /// </remarks>
 public sealed class GCounter :
@@ -25,6 +26,9 @@ public sealed class GCounter :
     IBinaryWritable,
     IEquatable<GCounter>
 {
+    private static long _nextLockOrder;
+    private readonly object _gate = new();
+    private readonly long _lockOrder = Interlocked.Increment(ref _nextLockOrder);
     private readonly Dictionary<ReplicaId, ulong> _counts;
     private Dictionary<ReplicaId, ulong>? _delta;
 
@@ -38,19 +42,31 @@ public sealed class GCounter :
     {
         get
         {
-            ulong sum = 0;
-            foreach (ulong slot in _counts.Values)
+            lock (_gate)
             {
-                sum += slot;
-            }
+                ulong sum = 0;
+                foreach (ulong slot in _counts.Values)
+                {
+                    sum += slot;
+                }
 
-            return sum;
+                return sum;
+            }
         }
     }
 
     /// <summary>Gets the accumulated total contributed by <paramref name="replica"/>.</summary>
     /// <param name="replica">The replica to look up.</param>
-    public ulong this[ReplicaId replica] => _counts.TryGetValue(replica, out ulong value) ? value : 0UL;
+    public ulong this[ReplicaId replica]
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _counts.TryGetValue(replica, out ulong value) ? value : 0UL;
+            }
+        }
+    }
 
     /// <summary>
     /// Increments <paramref name="replica"/>'s slot by <paramref name="amount"/> and returns the
@@ -67,21 +83,32 @@ public sealed class GCounter :
             Throw.ArgumentOutOfRange(nameof(amount), "Increment amount must be positive.");
         }
 
-        ulong next = this[replica] + amount;
-        _counts[replica] = next;
-        BufferDelta(replica, next);
-        return new GCounterOperation(replica, next);
+        lock (_gate)
+        {
+            ulong next = this[replica] + amount;
+            _counts[replica] = next;
+            BufferDelta(replica, next);
+            return new GCounterOperation(replica, next);
+        }
     }
 
     /// <inheritdoc/>
     public void Merge(GCounter other)
     {
         Throw.IfNull(other);
-        foreach (KeyValuePair<ReplicaId, ulong> entry in other._counts)
+        GCounter first = _lockOrder < other._lockOrder ? this : other;
+        GCounter second = ReferenceEquals(first, this) ? other : this;
+        lock (first._gate)
         {
-            if (!_counts.TryGetValue(entry.Key, out ulong current) || entry.Value > current)
+            lock (second._gate)
             {
-                _counts[entry.Key] = entry.Value;
+                foreach (KeyValuePair<ReplicaId, ulong> entry in other._counts)
+                {
+                    if (!_counts.TryGetValue(entry.Key, out ulong current) || entry.Value > current)
+                    {
+                        _counts[entry.Key] = entry.Value;
+                    }
+                }
             }
         }
     }
@@ -90,54 +117,71 @@ public sealed class GCounter :
     public CrdtOrder Compare(GCounter other)
     {
         Throw.IfNull(other);
-        bool less = false;
-        bool greater = false;
-
-        foreach (KeyValuePair<ReplicaId, ulong> entry in _counts)
+        GCounter first = _lockOrder < other._lockOrder ? this : other;
+        GCounter second = ReferenceEquals(first, this) ? other : this;
+        lock (first._gate)
         {
-            ulong otherValue = other[entry.Key];
-            if (entry.Value > otherValue)
+            lock (second._gate)
             {
-                greater = true;
-            }
-            else if (entry.Value < otherValue)
-            {
-                less = true;
+                bool less = false;
+                bool greater = false;
+
+                foreach (KeyValuePair<ReplicaId, ulong> entry in _counts)
+                {
+                    ulong otherValue = other[entry.Key];
+                    if (entry.Value > otherValue)
+                    {
+                        greater = true;
+                    }
+                    else if (entry.Value < otherValue)
+                    {
+                        less = true;
+                    }
+                }
+
+                foreach (KeyValuePair<ReplicaId, ulong> entry in other._counts)
+                {
+                    if (!_counts.ContainsKey(entry.Key) && entry.Value > 0UL)
+                    {
+                        less = true;
+                    }
+                }
+
+                return (less, greater) switch
+                {
+                    (true, true) => CrdtOrder.Concurrent,
+                    (true, false) => CrdtOrder.Less,
+                    (false, true) => CrdtOrder.Greater,
+                    _ => CrdtOrder.Equal,
+                };
             }
         }
-
-        foreach (KeyValuePair<ReplicaId, ulong> entry in other._counts)
-        {
-            if (!_counts.ContainsKey(entry.Key) && entry.Value > 0UL)
-            {
-                less = true;
-            }
-        }
-
-        return (less, greater) switch
-        {
-            (true, true) => CrdtOrder.Concurrent,
-            (true, false) => CrdtOrder.Less,
-            (false, true) => CrdtOrder.Greater,
-            _ => CrdtOrder.Equal,
-        };
     }
 
     /// <inheritdoc/>
-    public GCounter Clone() => new(new Dictionary<ReplicaId, ulong>(_counts));
+    public GCounter Clone()
+    {
+        lock (_gate)
+        {
+            return new GCounter(new Dictionary<ReplicaId, ulong>(_counts));
+        }
+    }
 
     /// <inheritdoc/>
     public bool TryExtractDelta([MaybeNullWhen(false)] out GCounter delta)
     {
-        if (_delta is null)
+        lock (_gate)
         {
-            delta = null;
-            return false;
-        }
+            if (_delta is null)
+            {
+                delta = null;
+                return false;
+            }
 
-        delta = new GCounter(_delta);
-        _delta = null;
-        return true;
+            delta = new GCounter(_delta);
+            _delta = null;
+            return true;
+        }
     }
 
     /// <inheritdoc/>
@@ -150,26 +194,21 @@ public sealed class GCounter :
     /// <inheritdoc/>
     public bool Apply(GCounterOperation operation)
     {
-        ulong current = this[operation.Replica];
-        if (operation.Value > current)
+        lock (_gate)
         {
-            _counts[operation.Replica] = operation.Value;
-            return true;
-        }
+            ulong current = this[operation.Replica];
+            if (operation.Value > current)
+            {
+                _counts[operation.Replica] = operation.Value;
+                return true;
+            }
 
-        return false;
+            return false;
+        }
     }
 
     /// <inheritdoc/>
-    public void Write(ref CrdtWriter writer)
-    {
-        writer.WriteVarUInt64((ulong)_counts.Count);
-        foreach (KeyValuePair<ReplicaId, ulong> entry in SortedCounts())
-        {
-            writer.WriteReplicaId(entry.Key);
-            writer.WriteVarUInt64(entry.Value);
-        }
-    }
+    public void Write(ref CrdtWriter writer) => WriteCounts(ref writer, SortedCounts());
 
     /// <summary>Decodes a <see cref="GCounter"/> from its binary representation.</summary>
     /// <param name="data">The encoded bytes.</param>
@@ -198,11 +237,15 @@ public sealed class GCounter :
     /// <returns>The JSON string.</returns>
     public string ToJson()
     {
-        var entries = new CounterEntryDto[_counts.Count];
-        int i = 0;
-        foreach (KeyValuePair<ReplicaId, ulong> entry in SortedCounts())
+        CounterEntryDto[] entries;
+        lock (_gate)
         {
-            entries[i++] = new CounterEntryDto(entry.Key, entry.Value);
+            entries = new CounterEntryDto[_counts.Count];
+            int i = 0;
+            foreach (KeyValuePair<ReplicaId, ulong> entry in SortedCounts())
+            {
+                entries[i++] = new CounterEntryDto(entry.Key, entry.Value);
+            }
         }
 
         return JsonSerializer.Serialize(entries, CrdtJson.Default.CounterEntryDtoArray);
@@ -228,20 +271,33 @@ public sealed class GCounter :
     /// <inheritdoc/>
     public bool Equals(GCounter? other)
     {
-        if (other is null || other._counts.Count != _counts.Count)
+        if (other is null)
         {
             return false;
         }
 
-        foreach (KeyValuePair<ReplicaId, ulong> entry in _counts)
+        GCounter first = _lockOrder < other._lockOrder ? this : other;
+        GCounter second = ReferenceEquals(first, this) ? other : this;
+        lock (first._gate)
         {
-            if (!other._counts.TryGetValue(entry.Key, out ulong value) || value != entry.Value)
+            lock (second._gate)
             {
-                return false;
+                if (other._counts.Count != _counts.Count)
+                {
+                    return false;
+                }
+
+                foreach (KeyValuePair<ReplicaId, ulong> entry in _counts)
+                {
+                    if (!other._counts.TryGetValue(entry.Key, out ulong value) || value != entry.Value)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
             }
         }
-
-        return true;
     }
 
     /// <inheritdoc/>
@@ -250,23 +306,47 @@ public sealed class GCounter :
     /// <inheritdoc/>
     public override int GetHashCode()
     {
-        int hash = 0;
-        foreach (KeyValuePair<ReplicaId, ulong> entry in _counts)
+        lock (_gate)
         {
-            hash ^= HashCode.Combine(entry.Key, entry.Value);
-        }
+            int hash = 0;
+            foreach (KeyValuePair<ReplicaId, ulong> entry in _counts)
+            {
+                hash ^= HashCode.Combine(entry.Key, entry.Value);
+            }
 
-        return hash;
+            return hash;
+        }
     }
 
-    internal IEnumerable<KeyValuePair<ReplicaId, ulong>> SortedCounts()
+    internal List<KeyValuePair<ReplicaId, ulong>> SortedCounts()
     {
-        var list = new List<KeyValuePair<ReplicaId, ulong>>(_counts);
+        List<KeyValuePair<ReplicaId, ulong>> list;
+        lock (_gate)
+        {
+            list = new List<KeyValuePair<ReplicaId, ulong>>(_counts);
+        }
+
         list.Sort(static (left, right) => left.Key.CompareTo(right.Key));
         return list;
     }
 
-    internal void SetCount(ReplicaId replica, ulong value) => _counts[replica] = value;
+    internal static void WriteCounts(ref CrdtWriter writer, List<KeyValuePair<ReplicaId, ulong>> counts)
+    {
+        writer.WriteVarUInt64((ulong)counts.Count);
+        foreach (KeyValuePair<ReplicaId, ulong> entry in counts)
+        {
+            writer.WriteReplicaId(entry.Key);
+            writer.WriteVarUInt64(entry.Value);
+        }
+    }
+
+    internal void SetCount(ReplicaId replica, ulong value)
+    {
+        lock (_gate)
+        {
+            _counts[replica] = value;
+        }
+    }
 
     private void BufferDelta(ReplicaId replica, ulong value)
     {

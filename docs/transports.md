@@ -16,6 +16,15 @@ var replica = new CrdtReplica<PNCounter>(
 
 Delta-capable CRDTs can use the overload that accepts `TryExtractDelta`, delta serialization, delta deserialization, and merge delegates. This keeps the transport layer independent of concrete CRDT implementations while still avoiding reflection.
 
+`Value` exposes the original mutable instance; it does not change the underlying type's
+concurrency contract. `GCounter` and `PNCounter` synchronize their individual operations,
+so a counter's `Value` can be read while received states, deltas, or operations are applied.
+For other CRDT types, coordinate direct access with application synchronization.
+
+`SnapshotState()` and received state/delta merges share the replica's synchronization gate.
+That gate does not cover direct local mutations or operation-application delegates; those
+remain subject to the underlying CRDT type's concurrency contract.
+
 ## ITransport
 
 `ITransport` is the minimal frame transport abstraction:

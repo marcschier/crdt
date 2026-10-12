@@ -9,6 +9,8 @@ High-performance, **NativeAOT-ready** [Conflict-free Replicated Data Types](http
 ## ✨ Why Crdt
 
 - **Strong eventual consistency** without coordination: replicas converge after exchanging state, deltas, or operations.
+- **Concurrent counters**: `GCounter` and `PNCounter` synchronize individual operations and snapshots;
+  PN reads observe a coherent positive/negative pair. Other CRDT types require external synchronization.
 - **Fast**: `readonly struct` building blocks, `Span<T>`/`IBufferWriter<byte>` serialization, `BinaryPrimitives`/`Unsafe` fast paths, no LINQ on hot paths.
 - **NativeAOT & trimming clean** on .NET 8/9/10 — the library is annotated `IsAotCompatible`, and the test suite itself is verified running as a NativeAOT binary.
 - **Broad reach**: targets `netstandard2.0`, `netstandard2.1`, `net8.0`, `net9.0`, `net10.0` (polyfilled on older runtimes).

@@ -49,7 +49,8 @@ var register = new LWWRegister<string>();
 register.Set("draft", clock);                      // stamps with clock.Now()
 ```
 
-The clock takes a `TimeProvider`, which makes time fully deterministic in tests. It is also the one place that is thread-safe, since it must hand out monotonic timestamps.
+The clock takes a `TimeProvider`, which makes time fully deterministic in tests. It is thread-safe,
+since it must hand out monotonic timestamps.
 
 ## Sequences
 
@@ -63,4 +64,23 @@ Identity-keyed structures serialize in a canonical, replica-sorted order, so equ
 
 ## Concurrency
 
-CRDT instances are **mutable and not thread-safe**: concurrent local mutation of a single instance requires external synchronization. Exchanging a clone or a serialized snapshot with another thread or machine is always safe.
+`GCounter` and `PNCounter` are mutable and **thread-safe for individual operations**. Reads,
+mutations, delta extraction, cloning, and binary/JSON exports are synchronized. Every PN
+operation observes a coherent positive/negative pair. Merge, comparison, and equality lock
+both operands in a stable instance order, so opposing operations cannot deadlock. Self-merge
+and self-comparison retain their usual idempotent/reflexive behavior.
+
+Binary exports capture the complete sorted state under those gates, then release the gates
+before calling a caller-provided buffer writer. JSON exports likewise serialize an owned,
+coherent snapshot outside the gates. A buffer-writer callback can access the original counter
+without acquiring a monitor still held by its export.
+
+Clones and extracted deltas own independent state; future changes to the original do not
+mutate them. Compound sequences of calls are not transactions: an increment followed by
+a read can observe intervening work, and an increment/decrement pair is two operations.
+Callers must still keep a mutable counter stable while using it as a dictionary key.
+Replica identity and the per-replica maximum merge rule are unchanged.
+
+Other CRDT instances remain **mutable and not thread-safe**: concurrent local mutation,
+reading, cloning, or serialization requires external synchronization. Once captured safely,
+an independent clone or serialized snapshot can be exchanged with another thread or machine.
