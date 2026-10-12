@@ -27,11 +27,11 @@ See `interop/scenarios/schema.json` for the complete minimal schema.
 
 ## Yjs harness
 
-Install dependencies once and run either a scenario file or the self-test:
+Use Node.js 24 LTS, install the locked dependencies, and run either a scenario file or the self-test:
 
 ```powershell
 cd interop\yjs-harness
-npm install
+npm ci
 node index.js --self-test
 node index.js ..\scenarios\concurrent-same-index.json
 ```

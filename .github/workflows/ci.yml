@@ -24,11 +24,11 @@ jobs:
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6.0.0
         with:
           dotnet-version: |
             8.0.x
@@ -67,11 +67,11 @@ jobs:
           - os: macos-latest
             rid: osx-arm64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6.0.0
         with:
           dotnet-version: |
             8.0.x
@@ -98,11 +98,11 @@ jobs:
     name: coverage gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6.0.0
         with:
           dotnet-version: |
             8.0.x
@@ -125,24 +125,24 @@ jobs:
     name: interop (Yjs convergence parity)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6.0.0
         with:
           dotnet-version: |
             8.0.x
             9.0.x
             10.0.x
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7.1.0
         with:
-          node-version: 20
+          node-version: 24.21.0
 
       - name: Install Yjs harness dependencies
         working-directory: interop/yjs-harness
-        run: npm install
+        run: npm ci
 
       - name: Yjs harness self-test
         working-directory: interop/yjs-harness
@@ -155,11 +155,11 @@ jobs:
     name: mqtt (broker gossip)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6.0.0
         with:
           dotnet-version: |
             8.0.x
@@ -171,7 +171,7 @@ jobs:
           printf 'listener 1883 0.0.0.0\nallow_anonymous true\n' > mosquitto.conf
           docker run -d --name mosquitto -p 1883:1883 \
             -v "$PWD/mosquitto.conf:/mosquitto/config/mosquitto.conf" \
-            eclipse-mosquitto:2
+            eclipse-mosquitto:2.1.2-alpine
           for i in $(seq 1 30); do
             if (exec 3<>/dev/tcp/localhost/1883) 2>/dev/null; then echo "broker ready"; break; fi
             sleep 1
@@ -191,11 +191,11 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0   # Nerdbank.GitVersioning needs full history + tags
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6.0.0
         with:
           dotnet-version: |
             8.0.x

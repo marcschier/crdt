@@ -19,7 +19,7 @@ Every node then applies a local mutation and calls `BroadcastStateAsync`. The br
 This sample needs a reachable MQTT broker. The quickest way is a local [Eclipse Mosquitto](https://mosquitto.org/) in Docker:
 
 ```shell
-docker run -d --name crdt-mosquitto -p 1883:1883 eclipse-mosquitto:2 \
+docker run -d --name crdt-mosquitto -p 1883:1883 eclipse-mosquitto:2.1.2-alpine \
   sh -c "printf 'listener 1883 0.0.0.0\nallow_anonymous true\n' > /mosquitto/config/mosquitto.conf && exec /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf"
 ```
 
