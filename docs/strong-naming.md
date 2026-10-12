@@ -9,6 +9,7 @@ All assemblies are signed with a single repository key, so they share one public
 | | Value |
 | --- | --- |
 | Public key token | `da3d093ebe8bf537` |
+| Assembly version | `1.1.0.0` |
 | Key file | [`crdt.snk`](../crdt.snk) (committed at the repository root) |
 
 You can confirm the identity of any shipped assembly with the .NET Strong Name tool, or from PowerShell:
@@ -28,6 +29,9 @@ Because the key is in the repository, signing happens during a normal build with
 
 - `Directory.Build.props` sets `SignAssembly=true` and `AssemblyOriginatorKeyFile` for **all** projects (libraries, tests, samples, and benchmarks). Signing every project keeps `InternalsVisibleTo` working, since a signed assembly may only grant friend access to another signed assembly.
 - The same file defines the `CrdtPublicKey` property (the full public key). Each `InternalsVisibleTo` grant is declared as an MSBuild `<InternalsVisibleTo Include="…" Key="$(CrdtPublicKey)" />` item so the public key is written exactly once.
+- `version.json` explicitly retains assembly version `1.1.0.0` as the package version advances
+  to `1.2.0`. Package, file, and informational versions still identify the current release;
+  the assembly binding identity and signing key remain compatible with `1.1.x`.
 
 ## Dependencies are strong-named too
 

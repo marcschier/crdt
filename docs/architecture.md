@@ -70,6 +70,11 @@ operation observes a coherent positive/negative pair. Merge, comparison, and equ
 both operands in a stable instance order, so opposing operations cannot deadlock. Self-merge
 and self-comparison retain their usual idempotent/reflexive behavior.
 
+Binary exports capture the complete sorted state under those gates, then release the gates
+before calling a caller-provided buffer writer. JSON exports likewise serialize an owned,
+coherent snapshot outside the gates. A buffer-writer callback can access the original counter
+without acquiring a monitor still held by its export.
+
 Clones and extracted deltas own independent state; future changes to the original do not
 mutate them. Compound sequences of calls are not transactions: an increment followed by
 a read can observe intervening work, and an increment/decrement pair is two operations.
