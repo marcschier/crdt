@@ -54,7 +54,8 @@ public sealed class PgmBusConvergenceTests
 
             await WaitUntilConvergedAsync(
                 cluster.Engines,
-                static engines => engines.All(engine => HasExpectedElements(engine.Replica.Value)));
+                static engines => engines.All(engine => HasExpectedElements(
+                    ORSet<string>.ReadFrom(engine.Replica.SnapshotState(), CrdtValues.String))));
         }
         finally
         {
