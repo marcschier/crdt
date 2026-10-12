@@ -7,6 +7,11 @@ The library is built for low allocation and high throughput:
 - Identity and event types (`ReplicaId`, `Dot`, `Timestamp`) are `readonly struct`s.
 - Serialization is `Span<T>`/`IBufferWriter<byte>` based, with LEB128 varints and pooled buffers; there is no reflection on any hot path.
 - Hot paths avoid LINQ and unnecessary allocation.
+- `GCounter` and `PNCounter` add one synchronization object and an ordering token per
+  instance. Their existing algorithms and per-replica storage remain unchanged; reads
+  and mutations acquire instance monitors, and binary operations lock both operands.
+  Merges do not allocate operand snapshots. Contended operations serialize, including
+  the positive/negative pair in a PN counter; measure throughput for your contention level.
 - On .NET 8+ the build uses the runtime's modern primitives (`BinaryPrimitives`, `MemoryMarshal`, `Unsafe`); on `netstandard2.0` and `netstandard2.1` the same code paths are kept working through polyfills.
 
 ## NativeAOT

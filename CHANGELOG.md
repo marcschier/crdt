@@ -1,9 +1,10 @@
 # Changelog
 
-## 1.1.3
+## 1.2.0
 
-Dependency and tooling maintenance release. Public APIs, all five target frameworks,
-strong-name identity, and the stable version channel are unchanged.
+Dependency and tooling update with additive thread-safety guarantees for `GCounter`
+and `PNCounter`. Public signatures, all five target frameworks, wire formats,
+strong-name identity (assembly version 1.1.0.0), and the stable channel are unchanged.
 
 - Update the published transport and consensus prerequisites: RaftCs 1.1.3,
   NanoMsgSharp 1.1.3, DtlsSharp 1.1.1, Pgm 0.10.2, and Mqtt.Client 1.1.5.
@@ -16,6 +17,10 @@ strong-name identity, and the stable version channel are unchanged.
   releases without changing the .NET 8/9/10 test matrix or its gates.
 - Select the coverage results directory explicitly for the upgraded testing
   platform, retaining the 85% floor and rejecting empty or nonfinite reports.
+- Synchronize all counter reads, mutations, merges, delta extraction, comparison,
+  cloning, and exports. PN operations observe a coherent positive/negative pair;
+  opposing merges acquire instance gates in a stable order. Existing tests,
+  assertions, timing, fixtures, and skips remain unchanged.
 - Update Yjs to 13.6.33 and its lockfile, use reproducible `npm ci` in CI,
   replace end-of-life Node.js 20 with Node.js 24 LTS, and pin Mosquitto 2.1.2.
 - Publish the existing nine CRDT packages to GitHub Packages first, then

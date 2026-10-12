@@ -13,7 +13,8 @@ namespace Crdt;
 /// </summary>
 /// <remarks>
 /// The internal state grows monotonically even though the observable value may decrease.
-/// Mutable and not thread-safe.
+/// Individual operations are thread-safe and observe a coherent positive/negative pair.
+/// Compound sequences of calls still require external synchronization.
 /// </remarks>
 public sealed class PNCounter :
     IConvergent<PNCounter>,
@@ -22,6 +23,10 @@ public sealed class PNCounter :
     IBinaryWritable,
     IEquatable<PNCounter>
 {
+    private static long _nextLockOrder;
+    private readonly object _gate = new();
+    private readonly long _lockOrder = Interlocked.Increment(ref _nextLockOrder);
+    // Children are exclusively owned; acquire PN gates before their GCounter gates.
     private readonly GCounter _positive;
     private readonly GCounter _negative;
 
@@ -39,7 +44,16 @@ public sealed class PNCounter :
     }
 
     /// <summary>Gets the counter's value: total increments minus total decrements.</summary>
-    public long Value => unchecked((long)_positive.Value - (long)_negative.Value);
+    public long Value
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return unchecked((long)_positive.Value - (long)_negative.Value);
+            }
+        }
+    }
 
     /// <summary>Increments the counter on behalf of <paramref name="replica"/>.</summary>
     /// <param name="replica">The local replica.</param>
@@ -47,8 +61,11 @@ public sealed class PNCounter :
     /// <returns>The operation to broadcast.</returns>
     public PNCounterOperation Increment(ReplicaId replica, ulong amount = 1)
     {
-        _positive.Increment(replica, amount);
-        return new PNCounterOperation(replica, _positive[replica], _negative[replica]);
+        lock (_gate)
+        {
+            _positive.Increment(replica, amount);
+            return new PNCounterOperation(replica, _positive[replica], _negative[replica]);
+        }
     }
 
     /// <summary>Decrements the counter on behalf of <paramref name="replica"/>.</summary>
@@ -57,41 +74,69 @@ public sealed class PNCounter :
     /// <returns>The operation to broadcast.</returns>
     public PNCounterOperation Decrement(ReplicaId replica, ulong amount = 1)
     {
-        _negative.Increment(replica, amount);
-        return new PNCounterOperation(replica, _positive[replica], _negative[replica]);
+        lock (_gate)
+        {
+            _negative.Increment(replica, amount);
+            return new PNCounterOperation(replica, _positive[replica], _negative[replica]);
+        }
     }
 
     /// <inheritdoc/>
     public void Merge(PNCounter other)
     {
         Throw.IfNull(other);
-        _positive.Merge(other._positive);
-        _negative.Merge(other._negative);
+        PNCounter first = _lockOrder < other._lockOrder ? this : other;
+        PNCounter second = ReferenceEquals(first, this) ? other : this;
+        lock (first._gate)
+        {
+            lock (second._gate)
+            {
+                _positive.Merge(other._positive);
+                _negative.Merge(other._negative);
+            }
+        }
     }
 
     /// <inheritdoc/>
     public CrdtOrder Compare(PNCounter other)
     {
         Throw.IfNull(other);
-        return CombineOrders(_positive.Compare(other._positive), _negative.Compare(other._negative));
+        PNCounter first = _lockOrder < other._lockOrder ? this : other;
+        PNCounter second = ReferenceEquals(first, this) ? other : this;
+        lock (first._gate)
+        {
+            lock (second._gate)
+            {
+                return CombineOrders(_positive.Compare(other._positive), _negative.Compare(other._negative));
+            }
+        }
     }
 
     /// <inheritdoc/>
-    public PNCounter Clone() => new(_positive.Clone(), _negative.Clone());
+    public PNCounter Clone()
+    {
+        lock (_gate)
+        {
+            return new PNCounter(_positive.Clone(), _negative.Clone());
+        }
+    }
 
     /// <inheritdoc/>
     public bool TryExtractDelta([MaybeNullWhen(false)] out PNCounter delta)
     {
-        bool hasPositive = _positive.TryExtractDelta(out GCounter? positiveDelta);
-        bool hasNegative = _negative.TryExtractDelta(out GCounter? negativeDelta);
-        if (!hasPositive && !hasNegative)
+        lock (_gate)
         {
-            delta = null;
-            return false;
-        }
+            bool hasPositive = _positive.TryExtractDelta(out GCounter? positiveDelta);
+            bool hasNegative = _negative.TryExtractDelta(out GCounter? negativeDelta);
+            if (!hasPositive && !hasNegative)
+            {
+                delta = null;
+                return false;
+            }
 
-        delta = new PNCounter(positiveDelta ?? new GCounter(), negativeDelta ?? new GCounter());
-        return true;
+            delta = new PNCounter(positiveDelta ?? new GCounter(), negativeDelta ?? new GCounter());
+            return true;
+        }
     }
 
     /// <inheritdoc/>
@@ -104,16 +149,28 @@ public sealed class PNCounter :
     /// <inheritdoc/>
     public bool Apply(PNCounterOperation operation)
     {
-        bool changedPositive = _positive.Apply(new GCounterOperation(operation.Replica, operation.Positive));
-        bool changedNegative = _negative.Apply(new GCounterOperation(operation.Replica, operation.Negative));
-        return changedPositive || changedNegative;
+        lock (_gate)
+        {
+            bool changedPositive = _positive.Apply(new GCounterOperation(operation.Replica, operation.Positive));
+            bool changedNegative = _negative.Apply(new GCounterOperation(operation.Replica, operation.Negative));
+            return changedPositive || changedNegative;
+        }
     }
 
     /// <inheritdoc/>
     public void Write(ref CrdtWriter writer)
     {
-        _positive.Write(ref writer);
-        _negative.Write(ref writer);
+        List<KeyValuePair<ReplicaId, ulong>> positive;
+        List<KeyValuePair<ReplicaId, ulong>> negative;
+        lock (_gate)
+        {
+            positive = _positive.SortedCounts();
+            negative = _negative.SortedCounts();
+        }
+
+        // User-provided buffer writers run only after the counter gates are released.
+        GCounter.WriteCounts(ref writer, positive);
+        GCounter.WriteCounts(ref writer, negative);
     }
 
     /// <summary>Decodes a <see cref="PNCounter"/> from its binary representation.</summary>
@@ -132,7 +189,12 @@ public sealed class PNCounter :
     /// <returns>The JSON string.</returns>
     public string ToJson()
     {
-        var dto = new PNCounterDto(ToEntries(_positive), ToEntries(_negative));
+        PNCounterDto dto;
+        lock (_gate)
+        {
+            dto = new PNCounterDto(ToEntries(_positive), ToEntries(_negative));
+        }
+
         return JsonSerializer.Serialize(dto, CrdtJson.Default.PNCounterDto);
     }
 
@@ -152,14 +214,35 @@ public sealed class PNCounter :
     }
 
     /// <inheritdoc/>
-    public bool Equals(PNCounter? other) =>
-        other is not null && _positive.Equals(other._positive) && _negative.Equals(other._negative);
+    public bool Equals(PNCounter? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        PNCounter first = _lockOrder < other._lockOrder ? this : other;
+        PNCounter second = ReferenceEquals(first, this) ? other : this;
+        lock (first._gate)
+        {
+            lock (second._gate)
+            {
+                return _positive.Equals(other._positive) && _negative.Equals(other._negative);
+            }
+        }
+    }
 
     /// <inheritdoc/>
     public override bool Equals([NotNullWhen(true)] object? obj) => Equals(obj as PNCounter);
 
     /// <inheritdoc/>
-    public override int GetHashCode() => HashCode.Combine(_positive, _negative);
+    public override int GetHashCode()
+    {
+        lock (_gate)
+        {
+            return HashCode.Combine(_positive, _negative);
+        }
+    }
 
     private static CounterEntryDto[] ToEntries(GCounter counter)
     {
