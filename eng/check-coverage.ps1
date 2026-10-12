@@ -18,15 +18,42 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-if (-not (Test-Path $CoverageFile))
+if (-not (Test-Path $CoverageFile -PathType Leaf))
 {
     Write-Host "Coverage file not found: $CoverageFile" -ForegroundColor Red
     exit 1
 }
 
 [xml]$report = Get-Content $CoverageFile
-$lineRate = [double]$report.coverage.'line-rate'
-$branchRate = [double]$report.coverage.'branch-rate'
+foreach ($attribute in @('line-rate', 'branch-rate', 'lines-valid', 'lines-covered'))
+{
+    if ([string]::IsNullOrWhiteSpace($report.coverage.$attribute))
+    {
+        Write-Host "Coverage report is missing '$attribute': $CoverageFile" -ForegroundColor Red
+        exit 1
+    }
+}
+
+$culture = [System.Globalization.CultureInfo]::InvariantCulture
+$lineRate = [double]::Parse($report.coverage.'line-rate', $culture)
+$branchRate = [double]::Parse($report.coverage.'branch-rate', $culture)
+$linesValid = [long]::Parse($report.coverage.'lines-valid', $culture)
+$linesCovered = [long]::Parse($report.coverage.'lines-covered', $culture)
+
+foreach ($rate in @($lineRate, $branchRate, $MinLineRate))
+{
+    if ([double]::IsNaN($rate) -or [double]::IsInfinity($rate) -or $rate -lt 0 -or $rate -gt 1)
+    {
+        Write-Host "Coverage rates must be finite fractions between 0 and 1." -ForegroundColor Red
+        exit 1
+    }
+}
+
+if ($linesValid -le 0 -or $linesCovered -lt 0 -or $linesCovered -gt $linesValid)
+{
+    Write-Host "Coverage report must contain a nonempty, valid line count." -ForegroundColor Red
+    exit 1
+}
 
 Write-Host ("Line coverage:   {0:P2}" -f $lineRate)
 Write-Host ("Branch coverage: {0:P2}" -f $branchRate)

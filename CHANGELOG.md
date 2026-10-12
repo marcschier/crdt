@@ -14,6 +14,8 @@ strong-name identity, and the stable version channel are unchanged.
   and the coverage extension to 18.12.0. Already-current packages are retained.
 - Update the .NET SDK to 10.0.401 and GitHub Actions to their published stable
   releases without changing the .NET 8/9/10 test matrix or its gates.
+- Select the coverage results directory explicitly for the upgraded testing
+  platform, retaining the 85% floor and rejecting empty or nonfinite reports.
 - Update Yjs to 13.6.33 and its lockfile, use reproducible `npm ci` in CI,
   replace end-of-life Node.js 20 with Node.js 24 LTS, and pin Mosquitto 2.1.2.
 - Publish the existing nine CRDT packages to GitHub Packages first, then
