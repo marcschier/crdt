@@ -16,25 +16,25 @@
   <ItemGroup>
     <PackageVersion Include="PolySharp" Version="1.16.0" />
     <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
-    <PackageVersion Include="Microsoft.Bcl.TimeProvider" Version="10.0.12" />
-    <PackageVersion Include="System.Text.Json" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Bcl.TimeProvider" Version="10.0.14" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.14" />
     <PackageVersion Include="System.Memory" Version="4.6.3" />
     <PackageVersion Include="Microsoft.Bcl.HashCode" Version="6.0.0" />
-    <PackageVersion Include="System.Threading.Channels" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.12" />
+    <PackageVersion Include="System.Threading.Channels" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.14" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 
   <!-- Raft consensus -->
   <!-- Raft consensus (marcschier/raft-cs). -->
   <ItemGroup>
-    <PackageVersion Include="RaftCs" Version="1.1.3" />
-    <PackageVersion Include="RaftCs.Transport" Version="1.1.3" />
+    <PackageVersion Include="RaftCs" Version="1.1.5" />
+    <PackageVersion Include="RaftCs.Transport" Version="1.1.5" />
   </ItemGroup>
 
   <!-- Test stack -->
   <ItemGroup>
-    <PackageVersion Include="TUnit" Version="1.74.0" />
+    <PackageVersion Include="TUnit" Version="1.76.28" />
     <PackageVersion Include="Rocks" Version="10.3.4" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
   </ItemGroup>
@@ -46,21 +46,21 @@
 
   <!-- Secure transport (DTLS) -->
   <ItemGroup>
-    <PackageVersion Include="DtlsSharp" Version="1.1.1" />
+    <PackageVersion Include="DtlsSharp" Version="1.1.2" />
   </ItemGroup>
 
   <!-- MQTT transport -->
   <ItemGroup>
-    <PackageVersion Include="Mqtt.Client" Version="1.1.5" />
+    <PackageVersion Include="Mqtt.Client" Version="1.1.6" />
   </ItemGroup>
 
   <!-- Scalability-protocols (nanomsg/NNG) transport -->
   <ItemGroup>
-    <PackageVersion Include="NanoMsgSharp" Version="1.1.3" />
+    <PackageVersion Include="NanoMsgSharp" Version="1.1.4" />
   </ItemGroup>
   <!-- PGM (RFC3208 multicast) transport -->
   <ItemGroup>
-    <PackageVersion Include="Pgm" Version="0.10.2" />
+    <PackageVersion Include="Pgm" Version="0.10.3" />
   </ItemGroup>
 
 </Project>

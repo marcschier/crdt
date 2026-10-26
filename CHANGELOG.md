@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.1
+
+Dependency servicing update; public APIs, all five target frameworks, wire formats,
+strong-name identity (assembly version 1.1.0.0), and the stable channel are unchanged.
+
+- Update the published transport and consensus prerequisites to RaftCs 1.1.5,
+  NanoMsgSharp 1.1.4, DtlsSharp 1.1.2, Pgm 0.10.3, and Mqtt.Client 1.1.6.
+  Update the unused central RaftCs.Transport declaration to 1.1.5 as well;
+  the CRDT Raft adapter consumes RaftCs directly, not RaftCs.Transport.
+- Update the .NET SDK to 10.0.403 and the .NET 10 compatibility packages
+  Microsoft.Bcl.TimeProvider, System.Text.Json, System.Threading.Channels,
+  and Microsoft.Bcl.AsyncInterfaces to 10.0.14.
+- Update TUnit to 1.76.28. Already-current package versions are retained.
+
 ## 1.2.0
 
 Dependency and tooling update with additive thread-safety guarantees for `GCounter`
