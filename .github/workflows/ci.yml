@@ -28,7 +28,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v6.0.0
+      - uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: |
             8.0.x
@@ -71,7 +71,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v6.0.0
+      - uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: |
             8.0.x
@@ -102,7 +102,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v6.0.0
+      - uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: |
             8.0.x
@@ -130,7 +130,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v6.0.0
+      - uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: |
             8.0.x
@@ -139,7 +139,7 @@ jobs:
 
       - uses: actions/setup-node@v7.1.0
         with:
-          node-version: 24.21.0
+          node-version: 24.22.3
 
       - name: Install Yjs harness dependencies
         working-directory: interop/yjs-harness
@@ -160,7 +160,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-dotnet@v6.0.0
+      - uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: |
             8.0.x
@@ -196,7 +196,7 @@ jobs:
         with:
           fetch-depth: 0   # Nerdbank.GitVersioning needs full history + tags
 
-      - uses: actions/setup-dotnet@v6.0.0
+      - uses: actions/setup-dotnet@v6.1.0
         with:
           dotnet-version: |
             8.0.x

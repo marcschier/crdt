@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.2
+
+Dependency servicing update; public APIs, all five target frameworks, wire formats,
+strong-name identity (assembly version 1.1.0.0), and the stable channel are unchanged.
+
+- Update the transport and consensus prerequisites to RaftCs 1.1.6, NanoMsgSharp
+  1.1.5, DtlsSharp 1.1.3, Pgm 0.10.4, and Mqtt.Client 1.1.7. The CRDT Raft adapter
+  consumes RaftCs directly, not RaftCs.Transport; its central version pin remains aligned.
+- Update the .NET SDK to 10.0.404, the .NET 10 compatibility packages to 10.0.15,
+  PolySharp to 1.17.1, and TUnit to 1.85.7. Update setup-dotnet to 6.1.0 and the
+  interop runner to Node.js 24.22.3; already-current dependencies and tools are retained.
+- MQTT qualification note: an earlier soak against Mqtt.Client 1.1.7 stopped receiving
+  during a healthy window; a later independently scheduled one-hour soak against the same
+  upstream commit passed. The cause remains unresolved; this update does not claim a fix.
+
 ## 1.2.1
 
 Dependency servicing update; public APIs, all five target frameworks, wire formats,
