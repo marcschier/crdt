@@ -62,4 +62,60 @@ public sealed class HybridLogicalClockTests
 
         await Assert.That(next > witnessed).IsTrue();
     }
+
+    [Test]
+    [Arguments(0)]
+    [Arguments(10_000)]
+    public async Task Witness_Carries_Full_Remote_Counter_Into_Wall_Clock(int wallOffset)
+    {
+        var clock = new HybridLogicalClock(Self, new FakeTimeProvider());
+        Timestamp local = clock.Now();
+        var remote = new Timestamp(local.WallClock + wallOffset, ulong.MaxValue, ReplicaId.FromUInt64(99));
+
+        Timestamp witnessed = clock.Witness(remote);
+
+        await Assert.That(witnessed).IsEqualTo(new Timestamp(remote.WallClock + 1, 0, Self));
+        await Assert.That(witnessed > remote).IsTrue();
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task Full_Local_Counter_Carries_And_Roundtrips(bool witnessOlderTimestamp)
+    {
+        var clock = new HybridLogicalClock(Self, new FakeTimeProvider());
+        var remote = new Timestamp(clock.Now().WallClock, ulong.MaxValue - 1, ReplicaId.FromUInt64(99));
+        Timestamp before = clock.Witness(remote);
+        Timestamp after = witnessOlderTimestamp ? clock.Witness(remote) : clock.Now();
+
+        Timestamp decodedBefore;
+        Timestamp decodedAfter;
+        using (var buffer = new PooledBufferWriter())
+        {
+            var writer = new CrdtWriter(buffer);
+            writer.WriteTimestamp(before);
+            writer.WriteTimestamp(after);
+            var reader = new CrdtReader(buffer.WrittenSpan);
+            decodedBefore = reader.ReadTimestamp();
+            decodedAfter = reader.ReadTimestamp();
+        }
+
+        await Assert.That(before).IsEqualTo(new Timestamp(remote.WallClock, ulong.MaxValue, Self));
+        await Assert.That(after).IsEqualTo(new Timestamp(remote.WallClock + 1, 0, Self));
+        await Assert.That(decodedBefore).IsEqualTo(before);
+        await Assert.That(decodedAfter).IsEqualTo(after);
+        await Assert.That(decodedAfter > decodedBefore).IsTrue();
+    }
+
+    [Test]
+    public async Task Witness_Without_Representable_Successor_Leaves_Clock_Unchanged()
+    {
+        var clock = new HybridLogicalClock(Self, new FakeTimeProvider());
+        Timestamp before = clock.Now();
+        var remote = new Timestamp(long.MaxValue, ulong.MaxValue, ReplicaId.FromUInt64(99));
+
+        await Assert.That(() => clock.Witness(remote)).Throws<OverflowException>();
+
+        await Assert.That(clock.Now()).IsEqualTo(new Timestamp(before.WallClock, before.Counter + 1, Self));
+    }
 }

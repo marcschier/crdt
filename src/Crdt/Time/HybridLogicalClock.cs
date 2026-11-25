@@ -13,6 +13,8 @@ namespace Crdt;
 /// concurrently. The physical time source is an injected <see cref="TimeProvider"/>
 /// (defaulting to <see cref="TimeProvider.System"/>), which makes the clock fully
 /// deterministic in tests.
+/// When the counter is full, the clock carries into the wall-clock component by one
+/// millisecond and resets the counter to zero.
 /// </remarks>
 public sealed class HybridLogicalClock : IClock
 {
@@ -40,22 +42,13 @@ public sealed class HybridLogicalClock : IClock
     /// timestamp this clock has previously produced or witnessed.
     /// </summary>
     /// <returns>A fresh, monotonic timestamp.</returns>
+    /// <exception cref="OverflowException">There is no representable successor to the current reading.</exception>
     public Timestamp Now()
     {
         lock (_gate)
         {
             long physical = PhysicalNow();
-            if (physical > _wallClock)
-            {
-                _wallClock = physical;
-                _counter = 0UL;
-            }
-            else
-            {
-                _counter++;
-            }
-
-            return new Timestamp(_wallClock, _counter, Replica);
+            return physical > _wallClock ? Update(physical, 0) : Increment(_wallClock, _counter);
         }
     }
 
@@ -66,37 +59,35 @@ public sealed class HybridLogicalClock : IClock
     /// </summary>
     /// <param name="remote">The timestamp observed from another replica.</param>
     /// <returns>A fresh, monotonic timestamp dominating <paramref name="remote"/>.</returns>
+    /// <exception cref="OverflowException">
+    /// There is no representable wall-clock and counter pair greater than the current or received reading.
+    /// The clock is unchanged.
+    /// </exception>
     public Timestamp Witness(Timestamp remote)
     {
         lock (_gate)
         {
-            long physical = PhysicalNow();
-            long previousWall = _wallClock;
-            long newWall = Max(previousWall, remote.WallClock, physical);
-
-            if (newWall == previousWall && newWall == remote.WallClock)
+            long wallClock = Math.Max(_wallClock, Math.Max(remote.WallClock, PhysicalNow()));
+            if (wallClock == _wallClock)
             {
-                _counter = Max(_counter, remote.Counter) + 1UL;
-            }
-            else if (newWall == previousWall)
-            {
-                _counter++;
-            }
-            else if (newWall == remote.WallClock)
-            {
-                _counter = remote.Counter + 1UL;
-            }
-            else
-            {
-                _counter = 0UL;
+                ulong counter = wallClock == remote.WallClock ? Math.Max(_counter, remote.Counter) : _counter;
+                return Increment(wallClock, counter);
             }
 
-            _wallClock = newWall;
-            return new Timestamp(_wallClock, _counter, Replica);
+            return wallClock == remote.WallClock ? Increment(wallClock, remote.Counter) : Update(wallClock, 0);
         }
     }
 
-    private static long Max(long a, long b, long c) => Math.Max(a, Math.Max(b, c));
+    private Timestamp Increment(long wallClock, ulong counter)
+    {
+        // Carry into the wall-clock component to preserve lexicographic timestamp order.
+        return counter == ulong.MaxValue ? Update(checked(wallClock + 1), 0) : Update(wallClock, counter + 1);
+    }
 
-    private static ulong Max(ulong a, ulong b) => a > b ? a : b;
+    private Timestamp Update(long wallClock, ulong counter)
+    {
+        _wallClock = wallClock;
+        _counter = counter;
+        return new Timestamp(wallClock, counter, Replica);
+    }
 }

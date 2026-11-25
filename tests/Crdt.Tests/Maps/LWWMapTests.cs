@@ -96,6 +96,56 @@ public sealed class LWWMapTests
     }
 
     [Test]
+    public async Task TryGetLatestTimestamp_Uses_Full_Timestamp_Order()
+    {
+        var map = new LWWMap<string, string>();
+        Timestamp latest = Ts(-1, 2, 2);
+        map.Set("earlier-wall", "alpha", Ts(-2, 3, 3));
+        map.Set("latest", "beta", latest);
+        map.Set("earlier-counter", "gamma", Ts(-1, 1, 3));
+        map.Set("earlier-origin", "delta", Ts(-1, 2, 1));
+
+        bool found = map.TryGetLatestTimestamp(out Timestamp timestamp);
+
+        await Assert.That(found).IsTrue();
+        await Assert.That(timestamp).IsEqualTo(latest);
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task TryGetLatestTimestamp_Includes_Decoded_Removals(bool hasLiveEntry)
+    {
+        var map = new LWWMap<string, long>();
+        Timestamp latest = Ts(3, 0, 1);
+        map.Set("removed", 42, Ts(1, 0, 1));
+        map.Remove("removed", latest);
+        if (hasLiveEntry)
+        {
+            map.Set("live", 7, Ts(2, 0, 1));
+        }
+
+        LWWMap<string, long> restored = LWWMap<string, long>.ReadFrom(
+            map.ToByteArray(CrdtValues.String, CrdtValues.Int64), CrdtValues.String, CrdtValues.Int64);
+
+        bool found = restored.TryGetLatestTimestamp(out Timestamp timestamp);
+
+        await Assert.That(found).IsTrue();
+        await Assert.That(timestamp).IsEqualTo(latest);
+    }
+
+    [Test]
+    public async Task TryGetLatestTimestamp_Returns_False_For_Empty_Map()
+    {
+        var map = new LWWMap<string, long>();
+
+        bool found = map.TryGetLatestTimestamp(out Timestamp timestamp);
+
+        await Assert.That(found).IsFalse();
+        await Assert.That(timestamp).IsEqualTo(default(Timestamp));
+    }
+
+    [Test]
     public void Merge_Converges_And_Satisfies_Laws()
     {
         CrdtLaws.AssertSemilattice(Sample(ReplicaA, "a", "b"), Sample(ReplicaB, "b", "c"), Sample(ReplicaC, "d", "e"));

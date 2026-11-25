@@ -254,6 +254,25 @@ public sealed class LWWMap<TKey, TValue> :
     /// <returns><see langword="true"/> when the key has a live value.</returns>
     public bool ContainsKey(TKey key) => TryGetValue(key, out _);
 
+    /// <summary>Finds the greatest timestamp among all retained entries, including removals.</summary>
+    /// <param name="timestamp">The greatest timestamp, or the default timestamp if no entries are retained.</param>
+    /// <returns><see langword="true"/> when at least one entry is retained.</returns>
+    public bool TryGetLatestTimestamp(out Timestamp timestamp)
+    {
+        timestamp = default;
+        bool found = false;
+        foreach (Entry entry in _entries.Values)
+        {
+            if (!found || entry.Timestamp > timestamp)
+            {
+                timestamp = entry.Timestamp;
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
     /// <inheritdoc/>
     public void Merge(LWWMap<TKey, TValue> other)
     {
