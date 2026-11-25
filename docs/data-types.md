@@ -110,6 +110,10 @@ m.Set("count", 2, clock);   // wins
 m.Remove("count", clock);
 ```
 
+Before merging a received map, use `TryGetLatestTimestamp(out Timestamp)` to find its greatest retained timestamp,
+including removal tombstones, and pass it to `HybridLogicalClock.Witness`. The query returns `false` only if no
+entries are retained, so a map with no live keys can still advance the clock.
+
 ### `ORMap<TKey, TValue>` — observed-remove map of CRDTs
 
 An add-wins map whose **values are themselves CRDTs**, merged through an `ICrdtValueOps<TValue>` you supply.
